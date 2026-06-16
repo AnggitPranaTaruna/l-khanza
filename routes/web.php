@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\CutiController;
+use App\Http\Controllers\SuratKeteranganSehatController;
 
 // 1. Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -76,4 +77,38 @@ Route::middleware('khanza.auth')->group(function () {
     Route::delete('/cuti/{no_pengajuan}', [CutiController::class, 'destroy'])
         ->name('cuti.destroy')
         ->middleware('khanza.auth:pengajuan_cuti');
+
+    // 2.3. Surat Subsystem Routes
+    Route::get('/surat/dashboard', [DashboardController::class, 'surat'])->name('surat.dashboard');
+    
+    Route::get('/surat/sehat/new-no', [SuratKeteranganSehatController::class, 'getNewNoSurat'])
+        ->name('surat.sehat.new-no')
+        ->middleware('khanza.auth:surat_keterangan_sehat');
+
+    Route::get('/surat/sehat/registrasi-lookup', [SuratKeteranganSehatController::class, 'getRegistrasiLookup'])
+        ->name('surat.sehat.registrasi-lookup')
+        ->middleware('khanza.auth:surat_keterangan_sehat');
+
+    Route::get('/surat/sehat', [SuratKeteranganSehatController::class, 'index'])
+        ->name('surat.sehat.index')
+        ->middleware('khanza.auth:surat_keterangan_sehat');
+
+    Route::post('/surat/sehat', [SuratKeteranganSehatController::class, 'store'])
+        ->name('surat.sehat.store')
+        ->middleware('khanza.auth:surat_keterangan_sehat');
+
+    Route::put('/surat/sehat/{no_surat}', [SuratKeteranganSehatController::class, 'update'])
+        ->name('surat.sehat.update')
+        ->middleware('khanza.auth:surat_keterangan_sehat')
+        ->where('no_surat', '.*');
+
+    Route::delete('/surat/sehat/{no_surat}', [SuratKeteranganSehatController::class, 'destroy'])
+        ->name('surat.sehat.destroy')
+        ->middleware('khanza.auth:surat_keterangan_sehat')
+        ->where('no_surat', '.*');
+
+    Route::get('/surat/sehat/{no_surat}/cetak', [SuratKeteranganSehatController::class, 'cetak'])
+        ->name('surat.sehat.cetak')
+        ->middleware('khanza.auth:surat_keterangan_sehat')
+        ->where('no_surat', '.*');
 });

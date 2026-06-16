@@ -52,7 +52,7 @@
     }
 
     .input-desktop {
-        background-color: rgba(15, 23, 42, 0.6);
+        background-color: var(--bg-input);
         border: 1px solid var(--border-color);
         border-radius: 20px; /* rounded pill style seperti di desktop */
         padding: 6px 14px;
@@ -76,7 +76,7 @@
     }
 
     .select-desktop {
-        background-color: rgba(15, 23, 42, 0.6);
+        background-color: var(--bg-input);
         border: 1px solid var(--border-color);
         border-radius: 20px;
         padding: 6px 14px;
@@ -87,11 +87,17 @@
         height: 32px;
         cursor: pointer;
         appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
         background-position: right 12px center;
         background-size: 14px;
         padding-right: 32px;
+    }
+
+    [data-theme="dark"] .select-desktop {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    }
+    [data-theme="light"] .select-desktop {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
     }
 
     .select-desktop:focus {
@@ -99,7 +105,7 @@
     }
 
     .textarea-desktop {
-        background-color: rgba(15, 23, 42, 0.6);
+        background-color: var(--bg-input);
         border: 1px solid var(--border-color);
         border-radius: 8px;
         padding: 8px 14px;
@@ -220,7 +226,7 @@
     }
 
     .modal-box {
-        background-color: #1e293b;
+        background-color: var(--bg-sidebar);
         border: 1px solid var(--border-color);
         border-radius: 8px;
         width: 100%;
@@ -252,6 +258,73 @@
         padding: 20px;
         overflow-y: auto;
         flex-grow: 1;
+    }
+
+    /* Media Queries khusus untuk Cuti Index (Desktop replica style) */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+            padding: 16px !important;
+        }
+
+        .form-desktop-row {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 6px !important;
+        }
+
+        .form-desktop-row label {
+            width: 100% !important;
+            margin-bottom: 2px;
+        }
+
+        .input-desktop, .select-desktop, .textarea-desktop {
+            width: 100% !important;
+        }
+
+        .desktop-button-bar {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            padding: 12px 16px !important;
+        }
+
+        .btn-desktop {
+            justify-content: center;
+            width: 100% !important;
+            font-size: 0.8rem !important;
+            padding: 6px 10px !important;
+        }
+
+        .desktop-filter-bar {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+            padding: 12px 16px !important;
+        }
+
+        .desktop-filter-bar > div {
+            width: 100% !important;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .desktop-filter-bar input[type="text"] {
+            width: 100% !important;
+        }
+
+        /* Set table font smaller for fitment */
+        .data-table th, .data-table td {
+            padding: 10px 12px !important;
+            font-size: 0.8rem !important;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .desktop-button-bar {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
     }
 </style>
 @endsection

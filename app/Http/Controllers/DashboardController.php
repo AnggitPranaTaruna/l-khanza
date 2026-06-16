@@ -60,4 +60,30 @@ class DashboardController extends Controller
 
         return view('pegawai.dashboard', compact('stats', 'recentLeaves'));
     }
+
+    /**
+     * Show the Surat Subsystem Dashboard (Stats & Recent Activity).
+     */
+    public function surat()
+    {
+        $stats = [
+            'total_sehat' => DB::table('surat_keterangan_sehat')->count(),
+            'total_sakit' => 0,
+            'total_bebas_narkoba' => 0,
+        ];
+
+        $recentSurat = DB::table('surat_keterangan_sehat')
+            ->join('reg_periksa', 'surat_keterangan_sehat.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->select(
+                'surat_keterangan_sehat.*',
+                'pasien.nm_pasien',
+                'reg_periksa.no_rkm_medis'
+            )
+            ->orderBy('surat_keterangan_sehat.tanggalsurat', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('surat.dashboard', compact('stats', 'recentSurat'));
+    }
 }

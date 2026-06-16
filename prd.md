@@ -102,9 +102,33 @@ Sistem menggunakan alur modular untuk memisahkan launcher utama dengan workspace
 
 ---
 
-## 🎨 6. Desain Visual & Pengalaman Pengguna
+## 6. Desain Visual & Pengalaman Pengguna
 
 * **Vanilla CSS**: Murni tanpa Tailwind/Bootstrap.
-* **Modern Dark Slate Theme**: Background gelap elegan (`#0f172a` & `#1e293b`), teks putih kontras, aksen biru neon (`#0ea5e9`), hijau emerald (`#10b981`), dan merah amber (`#ef4444`).
+* **Modern Themes (Dark & Light Mode)**:
+  * **Tema Gelap (Default)**: Slate theme (`#0f172a` bg, `#1e293b` cards/sidebar), aksen biru neon (`#0ea5e9`).
+  * **Tema Terang**: Light theme (`#f8fafc` bg, `#ffffff` sidebar/cards), aksen biru langit (`#0284c7`).
+  * **Pencegahan FOUC**: Skrip pemuatan dini disematkan pada `<head>` untuk menyetel tema secara instan dari `localStorage` sebelum halaman melakukan rendering visual.
+* **Responsive Layout (Mobile, Tablet, Laptop)**:
+  * **Desktop / Laptop (Layar > 768px)**: Sidebar dapat disembunyikan (collapsed) dengan menggeser keluar (`margin-left: -260px;`) via tombol hamburger di header untuk memperluas ruang kerja, dan statusnya disimpan di `localStorage`.
+  * **Tablet & Mobile (Layar ≤ 768px)**: Sidebar secara default disembunyikan off-screen dan berubah menjadi overlay laci (drawer) interaktif dengan backdrop gelap (overlay) ketika dibuka.
+  * **Form Stack & Grid Adaptive**: Form input pada Modul Cuti dan Pegawai yang tadinya sejajar horizontal otomatis ditumpuk secara vertikal (stacked) pada layar kecil untuk mencegah pemotongan kolom.
+  * **Responsive Tables**: Seluruh tabel dibungkus dalam `.table-container` dengan `overflow-x: auto` untuk gulir horizontal yang mulus tanpa merusak tata letak layar handphone.
 * **Glassmorphism**: Desain semi-transparan dengan efek blur pada kartu login dan launcher.
 * **Micro-Animations**: Hover transitions pada navigasi, tombol, dan baris tabel untuk meningkatkan keaktifan interaksi antarmuka.
+
+---
+
+## 7. ✉️ Modul Surat Keterangan (Letters Subsystem)
+
+* **Skema & Integritas Data**: Berjalan di atas tabel `surat_keterangan_sehat` (10 kolom) yang berelasi dengan `reg_periksa` (tabel registrasi) dan `pasien` (tabel profil pasien).
+* **Format Penomoran Otomatis**: Bidang `No.Surat` diisi otomatis saat form dalam keadaan baru menggunakan format `urut/D/SS/ROMAN_MONTH/AM/TBB/YEAR` (contoh: `001/D/SS/VI/AM/TBB/2026`). Nilai `urut` diperoleh dengan mengambil angka tertinggi yang terdaftar pada tahun berjalan lalu diinkrementasi (+1). Format nomor akan menyesuaikan secara real-time apabila tanggal surat diubah.
+* **Pencarian Registrasi Pasien (Lookup)**: Tombol clip (`📎`) membuka popup modal untuk mencari data registrasi pemeriksaan aktif (`no_rawat`) dari database. Hasil pencarian menampilkan data No. Rawat, No. Rekam Medis, dan Nama Pasien secara terperinci. Ketika baris dipilih, data langsung terisi di form utama.
+* **Layout Cetak Surat Resmi (High Fidelity)**: 
+  * Menu *Cetak* membuka jendela baru berisi berkas Surat Keterangan Sehat resmi siap cetak.
+  * Dilengkapi kop surat double-line dengan logo instansi dan detail alamat rumah sakit.
+  * Memuat data diri lengkap pasien beserta hasil pemeriksaan fisik (BB, TB, Tensi, Suhu, Buta Warna).
+  * Menampilkan kesimpulan kelaikan kondisi fisik (**SEHAT / TIDAK SEHAT**).
+  * Blok tanda tangan dokter pemeriksa dilengkapi tanda tangan elektronik (e-sign verification block) berbasis hashing SHA1 dari kode dokter.
+  * Otomatis memicu dialog cetak browser (`window.print()`).
+

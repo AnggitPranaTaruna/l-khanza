@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title') - L-Khanza SIMRS</title>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     @yield('styles')
 </head>
 <body>
     <div class="app-container">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -27,7 +36,9 @@
                 $isAdmin = $user['role'] === 'admin';
                 $hasPegawaiAccess = $isAdmin || (isset($user['permissions']['pegawai_admin']) && $user['permissions']['pegawai_admin'] === 'true') || (isset($user['permissions']['pegawai_user']) && $user['permissions']['pegawai_user'] === 'true');
                 $hasCutiAccess = $isAdmin || (isset($user['permissions']['pengajuan_cuti']) && $user['permissions']['pengajuan_cuti'] === 'true');
+                $hasSuratSehatAccess = $isAdmin || (isset($user['permissions']['surat_keterangan_sehat']) && $user['permissions']['surat_keterangan_sehat'] === 'true');
                 $isKepegawaianModule = request()->routeIs('pegawai.*') || request()->routeIs('cuti.*') || request()->is('kepegawaian*');
+                $isSuratModule = request()->routeIs('surat.*') || request()->is('surat*');
             @endphp
 
             <ul class="sidebar-menu">
@@ -81,6 +92,44 @@
                         </a>
                     </li>
                     @endif
+                @elseif($isSuratModule)
+                    <li>
+                        <a href="{{ route('dashboard') }}" class="sidebar-link" style="color: var(--primary);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="11 17 6 12 11 7"></polyline>
+                                <polyline points="18 17 13 12 18 7"></polyline>
+                            </svg>
+                            Menu Utama
+                        </a>
+                    </li>
+                    <li style="padding: 10px 16px 5px 16px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">
+                        Subsystem Surat
+                    </li>
+                    <li>
+                        <a href="{{ route('surat.dashboard') }}" class="sidebar-link {{ request()->routeIs('surat.dashboard') ? 'active' : '' }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="9"></rect>
+                                <rect x="14" y="3" width="7" height="5"></rect>
+                                <rect x="14" y="12" width="7" height="9"></rect>
+                                <rect x="3" y="16" width="7" height="5"></rect>
+                            </svg>
+                            Dashboard Modul
+                        </a>
+                    </li>
+                    @if($hasSuratSehatAccess)
+                    <li>
+                        <a href="{{ route('surat.sehat.index') }}" class="sidebar-link {{ request()->routeIs('surat.sehat.*') ? 'active' : '' }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Surat Ket. Sehat
+                        </a>
+                    </li>
+                    @endif
                 @else
                     <li>
                         <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -123,8 +172,33 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="header">
-                <h1 class="page-title">@yield('header_title')</h1>
+                <div class="header-left">
+                    <button type="button" id="sidebar-toggle" class="btn-toggle-sidebar" aria-label="Toggle Sidebar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="page-title">@yield('header_title')</h1>
+                </div>
                 <div class="header-right">
+                    <button type="button" id="theme-toggle" class="btn-theme-toggle" aria-label="Toggle Theme">
+                        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
                     <span style="font-size: 0.85rem; color: var(--text-secondary);">
                         Tanggal: <strong>{{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</strong>
                     </span>
@@ -157,5 +231,49 @@
         </main>
     </div>
     @yield('scripts')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const appContainer = document.querySelector('.app-container');
+            const overlay = document.getElementById('sidebar-overlay');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // Load sidebar collapsed state on desktop
+            if (window.innerWidth > 768) {
+                const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+                if (isCollapsed) {
+                    appContainer.classList.add('sidebar-collapsed');
+                }
+            }
+
+            // Sidebar Toggle
+            sidebarToggle.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    appContainer.classList.toggle('sidebar-open');
+                } else {
+                    appContainer.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem('sidebar-collapsed', appContainer.classList.contains('sidebar-collapsed'));
+                }
+            });
+
+            // Overlay Click (to close sidebar on mobile)
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    appContainer.classList.remove('sidebar-open');
+                });
+            }
+
+            // Theme Toggle
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    let currentTheme = document.documentElement.getAttribute('data-theme');
+                    let newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

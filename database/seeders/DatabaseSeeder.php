@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         // 1. Seed Bank
         if (DB::table('bank')->count() === 0) {
             DB::table('bank')->insert([
@@ -206,8 +208,123 @@ class DatabaseSeeder extends Seeder
             $userData['pegawai_admin'] = 'true';
             $userData['pegawai_user'] = 'true';
             $userData['pengajuan_cuti'] = 'true';
+            $userData['surat_keterangan_sehat'] = 'true';
 
             DB::table('user')->insert($userData);
         }
+
+        // 14. Seed Spesialis, Dokter, Poliklinik, Penjab, Pasien, and Reg Periksa for testing Surat
+        if (DB::table('spesialis')->count() === 0) {
+            DB::table('spesialis')->insert(['kd_sps' => 'UMUM', 'nm_sps' => 'Umum']);
+        }
+        if (DB::table('pegawai')->where('nik', 'DR001')->count() === 0) {
+            DB::table('pegawai')->insert([
+                'nik' => 'DR001',
+                'nama' => 'dr. Salim Mulyana',
+                'jk' => 'Pria',
+                'jbtn' => 'Dokter Umum',
+                'jnj_jabatan' => 'DOK',
+                'kode_kelompok' => 'MED',
+                'kode_resiko' => 'SED',
+                'kode_emergency' => 'EM2',
+                'departemen' => 'MED',
+                'bidang' => 'Medis',
+                'stts_wp' => 'TK/0',
+                'stts_kerja' => 'KTY',
+                'npwp' => '-',
+                'pendidikan' => 'S1 Profesi',
+                'gapok' => 3500000,
+                'tmp_lahir' => 'Jakarta',
+                'tgl_lahir' => '1980-01-01',
+                'alamat' => 'Jl. Salemba No. 5',
+                'kota' => 'Jakarta',
+                'mulai_kerja' => '2015-01-01',
+                'ms_kerja' => 'FT>1',
+                'indexins' => 'MED',
+                'bpd' => 'Bank Mandiri',
+                'rekening' => '1234567891',
+                'stts_aktif' => 'AKTIF',
+                'wajibmasuk' => 25,
+                'pengurang' => 0,
+                'indek' => 6,
+                'cuti_diambil' => 0,
+                'dankes' => 0,
+                'no_ktp' => '3171012345670003',
+            ]);
+        }
+        if (DB::table('dokter')->count() === 0) {
+            DB::table('dokter')->insert(['kd_dokter' => 'DR001', 'nm_dokter' => 'dr. Salim Mulyana', 'jk' => 'L', 'status' => '1', 'kd_sps' => 'UMUM']);
+        }
+        if (DB::table('poliklinik')->count() === 0) {
+            DB::table('poliklinik')->insert(['kd_poli' => 'PL001', 'nm_poli' => 'Poli Umum', 'registrasi' => 10000, 'registrasilama' => 10000, 'status' => '1']);
+        }
+        if (DB::table('penjab')->count() === 0) {
+            DB::table('penjab')->insert(['kd_pj' => 'UMU', 'png_jawab' => 'Umum', 'nama_perusahaan' => 'Umum', 'alamat_asuransi' => '-', 'no_telp' => '-', 'attn' => '-', 'status' => '1']);
+        }
+        if (DB::table('pasien')->count() === 0) {
+            DB::table('pasien')->insert([
+                'no_rkm_medis' => '000001',
+                'nm_pasien' => 'Budi Santoso',
+                'no_ktp' => '1234567890123456',
+                'jk' => 'L',
+                'tmp_lahir' => 'Jakarta',
+                'tgl_lahir' => '1990-01-01',
+                'nm_ibu' => 'Ibu Budi',
+                'alamat' => 'Jl. Merdeka No. 1',
+                'gol_darah' => 'O',
+                'pekerjaan' => 'Swasta',
+                'stts_nikah' => 'BELUM MENIKAH',
+                'agama' => 'Islam',
+                'tgl_daftar' => '2026-06-16',
+                'no_tlp' => '081234567890',
+                'umur' => '36 Th',
+                'pnd' => 'SMA',
+                'keluarga' => 'DIRI SENDIRI',
+                'namakeluarga' => 'Budi Santoso',
+                'kd_pj' => 'UMU',
+                'no_peserta' => '',
+                'kd_kel' => 0,
+                'kd_kec' => 0,
+                'kd_kab' => 0,
+                'pekerjaanpj' => '-',
+                'alamatpj' => '-',
+                'kelurahanpj' => '-',
+                'kecamatanpj' => '-',
+                'kabupatenpj' => '-',
+                'perusahaan_pasien' => '-',
+                'suku_bangsa' => 0,
+                'bahasa_pasien' => 0,
+                'cacat_fisik' => 0,
+                'email' => '-',
+                'nip' => '-',
+                'kd_prop' => 0,
+                'propinsipj' => '-',
+            ]);
+        }
+        if (DB::table('reg_periksa')->count() === 0) {
+            DB::table('reg_periksa')->insert([
+                'no_reg' => '001',
+                'no_rawat' => '2026/06/16/0001',
+                'tgl_registrasi' => '2026-06-16',
+                'jam_reg' => '08:00:00',
+                'kd_dokter' => 'DR001',
+                'no_rkm_medis' => '000001',
+                'kd_poli' => 'PL001',
+                'p_jawab' => 'Budi Santoso',
+                'almt_pj' => 'Jl. Merdeka No. 1',
+                'hubunganpj' => 'DIRI SENDIRI',
+                'biaya_reg' => 10000,
+                'stts' => 'Belum',
+                'stts_daftar' => 'Baru',
+                'status_lanjut' => 'Ralan',
+                'kd_pj' => 'UMU',
+                'umurdaftar' => 36,
+                'sttsumur' => 'Th',
+                'status_bayar' => 'Belum Bayar',
+                'status_poli' => 'Baru',
+            ]);
+        }
+
+        Schema::enableForeignKeyConstraints();
     }
 }
