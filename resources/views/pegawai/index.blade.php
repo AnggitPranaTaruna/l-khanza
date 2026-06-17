@@ -3,9 +3,49 @@
 @section('title', 'Data Kepegawaian')
 @section('header_title', 'Manajemen Kepegawaian')
 
+@section('styles')
+<style>
+    .index-card {
+        padding: 24px 0 0 0; 
+        overflow: hidden;
+    }
+    .index-card-header {
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 16px; 
+        align-items: center; 
+        justify-content: space-between; 
+        padding: 0 24px 20px 24px; 
+        border-bottom: 1px solid var(--border-color);
+    }
+    .index-pagination {
+        padding: 20px 24px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    @media (max-width: 768px) {
+        .index-card {
+            padding: 16px 0 0 0;
+        }
+        .index-card-header {
+            padding: 0 16px 16px 16px;
+        }
+        .index-pagination {
+            padding: 16px;
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+@endsection
+
 @section('content')
-<div class="card" style="padding: 32px 0 0 0; overflow: hidden;">
-    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding: 0 32px 24px 32px; border-bottom: 1px solid var(--border-color);">
+<div class="card index-card">
+    <div class="index-card-header">
         <div>
             <h3 style="font-weight: 600; font-size: 1.15rem;">Daftar Seluruh Pegawai</h3>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Kelola profil, jabatan, dan data administratif staf medis/non-medis.</p>
@@ -117,7 +157,7 @@
 
     <!-- Pagination -->
     @if($pegawai->hasPages())
-        <div style="padding: 24px 32px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <div class="index-pagination">
             <div style="font-size: 0.85rem; color: var(--text-secondary);">
                 Menampilkan {{ $pegawai->firstItem() }} - {{ $pegawai->lastItem() }} dari {{ $pegawai->total() }} pegawai
             </div>

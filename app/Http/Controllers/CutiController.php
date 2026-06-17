@@ -34,7 +34,10 @@ class CutiController extends Controller
 
         // If not admin, regular user can only see their own leave requests
         if (!$isAdmin) {
-            $query->where('pengajuan_cuti.nik', $user['username']);
+            $query->where(function($q) use ($user) {
+                $q->where('pengajuan_cuti.nik', $user['username'])
+                  ->orWhere('pengajuan_cuti.nik_pj', $user['username']);
+            });
         }
 
         // Apply Date Filter if checked ('true')
@@ -97,7 +100,6 @@ class CutiController extends Controller
             'alamat' => 'required|string|max:100',
             'kepentingan' => 'required|string|max:70',
             'nik_pj' => 'required|string|exists:pegawai,nik',
-            'status' => 'required|in:Proses Pengajuan,Disetujui,Ditolak',
         ]);
 
         // Calculate leave days count (inclusive)
@@ -117,15 +119,8 @@ class CutiController extends Controller
                 'jumlah' => $jumlah,
                 'kepentingan' => $request->kepentingan,
                 'nik_pj' => $request->nik_pj,
-                'status' => $request->status,
+                'status' => 'Proses Pengajuan',
             ]);
-
-            // If immediately approved, increment cuti_diambil in pegawai table
-            if ($request->status === 'Disetujui') {
-                DB::table('pegawai')
-                    ->where('nik', $request->nik)
-                    ->increment('cuti_diambil', $jumlah);
-            }
         });
 
         if ($request->expectsJson()) {
@@ -152,7 +147,6 @@ class CutiController extends Controller
             'alamat' => 'required|string|max:100',
             'kepentingan' => 'required|string|max:70',
             'nik_pj' => 'required|string|exists:pegawai,nik',
-            'status' => 'required|in:Proses Pengajuan,Disetujui,Ditolak',
         ]);
 
         $cuti = DB::table('pengajuan_cuti')->where('no_pengajuan', $no_pengajuan)->first();
@@ -169,9 +163,8 @@ class CutiController extends Controller
         $jumlah = $start->diffInDays($end) + 1;
 
         DB::transaction(function() use ($cuti, $request, $jumlah, $no_pengajuan) {
-            // Handle taken leave quota updates in pegawai table
+            // Handle taken leave quota updates in pegawai table (if already approved)
             $oldStatus = $cuti->status;
-            $newStatus = $request->status;
             $oldNik = $cuti->nik;
             $newNik = $request->nik;
             $oldJumlah = $cuti->jumlah;
@@ -182,25 +175,16 @@ class CutiController extends Controller
                 // Decrement old employee if old status was approved
                 if ($oldStatus === 'Disetujui') {
                     DB::table('pegawai')->where('nik', $oldNik)->decrement('cuti_diambil', $oldJumlah);
-                }
-                // Increment new employee if new status is approved
-                if ($newStatus === 'Disetujui') {
                     DB::table('pegawai')->where('nik', $newNik)->increment('cuti_diambil', $newJumlah);
                 }
             } else {
                 // Same employee
-                if ($oldStatus === 'Disetujui' && $newStatus === 'Disetujui') {
+                if ($oldStatus === 'Disetujui') {
                     // Status was and is Approved, but duration may have changed
                     if ($oldJumlah !== $newJumlah) {
                         $diff = $newJumlah - $oldJumlah;
                         DB::table('pegawai')->where('nik', $newNik)->increment('cuti_diambil', $diff);
                     }
-                } elseif ($oldStatus !== 'Disetujui' && $newStatus === 'Disetujui') {
-                    // Newly approved
-                    DB::table('pegawai')->where('nik', $newNik)->increment('cuti_diambil', $newJumlah);
-                } elseif ($oldStatus === 'Disetujui' && $newStatus !== 'Disetujui') {
-                    // Revoked approval
-                    DB::table('pegawai')->where('nik', $newNik)->decrement('cuti_diambil', $oldJumlah);
                 }
             }
 
@@ -217,7 +201,6 @@ class CutiController extends Controller
                     'jumlah' => $jumlah,
                     'kepentingan' => $request->kepentingan,
                     'nik_pj' => $request->nik_pj,
-                    'status' => $request->status,
                 ]);
         });
 
@@ -266,6 +249,51 @@ class CutiController extends Controller
     }
 
     /**
+     * Print leave request form.
+     */
+    public function cetak($no_pengajuan)
+    {
+        $no_pengajuan = urldecode($no_pengajuan);
+
+        $cuti = DB::table('pengajuan_cuti')
+            ->join('pegawai as p1', 'pengajuan_cuti.nik', '=', 'p1.nik')
+            ->leftJoin('pegawai as p2', 'pengajuan_cuti.nik_pj', '=', 'p2.nik')
+            ->select(
+                'pengajuan_cuti.*',
+                'p1.nama as nama_pemohon',
+                'p1.jbtn as jabatan_pemohon',
+                'p1.bidang as bidang_pemohon',
+                'p1.departemen as departemen_pemohon',
+                'p2.nama as nama_pj',
+                'p2.jbtn as jabatan_pj'
+            )
+            ->where('pengajuan_cuti.no_pengajuan', $no_pengajuan)
+            ->first();
+
+        if (!$cuti) {
+            abort(404, 'Pengajuan cuti tidak ditemukan.');
+        }
+
+        // Fetch hospital setting info
+        $rs = DB::table('setting')->first() ?: (object)[
+            'nama_instansi' => 'RUMAH SAKIT ASY-SYIFA MEDIKA',
+            'alamat_instansi' => 'Jl. Jenderal Sudirman No. 12',
+            'kabupaten' => 'Tanggamus',
+            'propinsi' => 'Lampung',
+            'kontak' => '0729-123456',
+            'email' => 'contact@asy-syifa.com',
+            'logo' => null,
+        ];
+
+        // Format dates
+        $tgl_pengajuan_formatted = Carbon::parse($cuti->tanggal)->translatedFormat('d F Y');
+        $tgl_awal_formatted = Carbon::parse($cuti->tanggal_awal)->translatedFormat('d F Y');
+        $tgl_akhir_formatted = Carbon::parse($cuti->tanggal_akhir)->translatedFormat('d F Y');
+
+        return view('cuti.cetak', compact('cuti', 'rs', 'tgl_pengajuan_formatted', 'tgl_awal_formatted', 'tgl_akhir_formatted'));
+    }
+
+    /**
      * JSON API Endpoint: Generate sequential document number in PCYYYYMMDDXXX format.
      */
     public function getNewNoPengajuan(Request $request)
@@ -298,27 +326,84 @@ class CutiController extends Controller
     }
 
     /**
-     * Approve a leave request (legacy endpoint support).
+     * Approve a leave request (Admin/HRD).
      */
     public function approve($no_pengajuan)
     {
+        $no_pengajuan = urldecode($no_pengajuan);
         $cuti = DB::table('pengajuan_cuti')->where('no_pengajuan', $no_pengajuan)->first();
-        if ($cuti && $cuti->status === 'Proses Pengajuan') {
+        if ($cuti && $cuti->status === 'Disetujui PJ') {
             DB::transaction(function() use ($cuti, $no_pengajuan) {
                 DB::table('pengajuan_cuti')->where('no_pengajuan', $no_pengajuan)->update(['status' => 'Disetujui']);
                 DB::table('pegawai')->where('nik', $cuti->nik)->increment('cuti_diambil', $cuti->jumlah);
             });
+            return back()->with('success', 'Pengajuan cuti ' . $no_pengajuan . ' telah disetujui oleh HRD.');
         }
-        return redirect()->route('cuti.index');
+        return back()->with('error', 'Gagal menyetujui. Pengajuan harus disetujui oleh Penanggung Jawab terlebih dahulu.');
     }
 
     /**
-     * Reject a leave request (legacy endpoint support).
+     * Reject a leave request (Admin/HRD).
      */
     public function reject($no_pengajuan)
     {
+        $no_pengajuan = urldecode($no_pengajuan);
         DB::table('pengajuan_cuti')->where('no_pengajuan', $no_pengajuan)->update(['status' => 'Ditolak']);
-        return redirect()->route('cuti.index');
+        return back()->with('success', 'Pengajuan cuti ' . $no_pengajuan . ' telah ditolak oleh HRD.');
+    }
+
+    /**
+     * Approve a leave request (Penanggung Jawab).
+     */
+    public function approvePj($no_pengajuan)
+    {
+        $no_pengajuan = urldecode($no_pengajuan);
+        $user = session('khanza_user');
+        
+        $cuti = DB::table('pengajuan_cuti')->where('no_pengajuan', $no_pengajuan)->first();
+        if (!$cuti) {
+            abort(404, 'Data tidak ditemukan.');
+        }
+        
+        if ($cuti->nik_pj !== $user['username']) {
+            abort(403, 'Anda bukan Penanggung Jawab untuk pengajuan ini.');
+        }
+        
+        if ($cuti->status === 'Proses Pengajuan') {
+            DB::table('pengajuan_cuti')
+                ->where('no_pengajuan', $no_pengajuan)
+                ->update(['status' => 'Disetujui PJ']);
+            return back()->with('success', 'Pengajuan cuti ' . $no_pengajuan . ' telah disetujui oleh Anda sebagai Penanggung Jawab.');
+        }
+        
+        return back()->with('error', 'Status pengajuan tidak valid untuk disetujui.');
+    }
+
+    /**
+     * Reject a leave request (Penanggung Jawab).
+     */
+    public function rejectPj($no_pengajuan)
+    {
+        $no_pengajuan = urldecode($no_pengajuan);
+        $user = session('khanza_user');
+        
+        $cuti = DB::table('pengajuan_cuti')->where('no_pengajuan', $no_pengajuan)->first();
+        if (!$cuti) {
+            abort(404, 'Data tidak ditemukan.');
+        }
+        
+        if ($cuti->nik_pj !== $user['username']) {
+            abort(403, 'Anda bukan Penanggung Jawab untuk pengajuan ini.');
+        }
+        
+        if ($cuti->status === 'Proses Pengajuan') {
+            DB::table('pengajuan_cuti')
+                ->where('no_pengajuan', $no_pengajuan)
+                ->update(['status' => 'Ditolak']);
+            return back()->with('success', 'Pengajuan cuti ' . $no_pengajuan . ' telah ditolak.');
+        }
+        
+        return back()->with('error', 'Status pengajuan tidak valid untuk ditolak.');
     }
 
     /**

@@ -98,7 +98,8 @@ class AuthController extends Controller
     public function logout()
     {
         Session::forget('khanza_user');
-        Session::flush();
+        session()->invalidate();
+        session()->regenerateToken();
         return redirect()->route('login')->with('success', 'Anda telah berhasil keluar.');
     }
 }

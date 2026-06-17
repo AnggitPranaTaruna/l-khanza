@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') - L-Khanza SIMRS</title>
+    <title>@yield('title') - SIMRS KHANZA</title>
     <script>
         (function () {
             const theme = localStorage.getItem('theme') || 'dark';
@@ -27,7 +27,7 @@
                         <path d="M2 17L12 22L22 17" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M2 12L12 17L22 12" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <span>L-Khanza</span>
+                    <span>SIMRS KHANZA</span>
                 </div>
             </div>
 
@@ -37,7 +37,8 @@
                 $hasPegawaiAccess = $isAdmin || (isset($user['permissions']['pegawai_admin']) && $user['permissions']['pegawai_admin'] === 'true') || (isset($user['permissions']['pegawai_user']) && $user['permissions']['pegawai_user'] === 'true');
                 $hasCutiAccess = $isAdmin || (isset($user['permissions']['pengajuan_cuti']) && $user['permissions']['pengajuan_cuti'] === 'true');
                 $hasSuratSehatAccess = $isAdmin || (isset($user['permissions']['surat_keterangan_sehat']) && $user['permissions']['surat_keterangan_sehat'] === 'true');
-                $isKepegawaianModule = request()->routeIs('pegawai.*') || request()->routeIs('cuti.*') || request()->is('kepegawaian*');
+                $hasKelahiranBayiAccess = $isAdmin || (isset($user['permissions']['kelahiran_bayi']) && $user['permissions']['kelahiran_bayi'] === 'true');
+                $isKepegawaianModule = request()->routeIs('pegawai.*') || request()->routeIs('cuti.*') || request()->routeIs('tukar-jaga.*') || request()->is('kepegawaian*') || request()->is('tukar-jaga*');
                 $isSuratModule = request()->routeIs('surat.*') || request()->is('surat*');
             @endphp
 
@@ -91,6 +92,18 @@
                             Cuti Pegawai
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('tukar-jaga.index') }}" class="sidebar-link {{ request()->routeIs('tukar-jaga.*') ? 'active' : '' }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 2.1l4 2-4 2"></path>
+                                <path d="M3 12h18"></path>
+                                <path d="M21 12l-4-4m4 4l-4 4"></path>
+                                <path d="M7 21.9l-4-2 4-2"></path>
+                                <path d="M3 12V3a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path>
+                            </svg>
+                            Tukar Jaga
+                        </a>
+                    </li>
                     @endif
                 @elseif($isSuratModule)
                     <li>
@@ -130,6 +143,19 @@
                         </a>
                     </li>
                     @endif
+                    @if($hasKelahiranBayiAccess)
+                    <li>
+                        <a href="{{ route('surat.kelahiran.index') }}" class="sidebar-link {{ request()->routeIs('surat.kelahiran.*') ? 'active' : '' }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                            </svg>
+                            Surat Ket. Kelahiran Bayi
+                        </a>
+                    </li>
+                    @endif
                 @else
                     <li>
                         <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -155,17 +181,14 @@
                         <span class="user-role">{{ $isAdmin ? 'Admin Utama' : 'Pegawai' }}</span>
                     </div>
                 </div>
-                <form action="{{ route('logout') }}" method="POST" style="display: block; width: 100%;">
-                    @csrf
-                    <button type="submit" class="btn-logout" style="width: 100%; border: none;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        Keluar
-                    </button>
-                </form>
+                <a href="{{ route('logout') }}" class="btn-logout" style="width: 100%; text-decoration: none; box-sizing: border-box;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Keluar
+                </a>
             </div>
         </aside>
 

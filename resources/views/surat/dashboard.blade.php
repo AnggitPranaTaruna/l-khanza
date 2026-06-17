@@ -4,6 +4,10 @@
 @section('header_title', 'Dashboard Surat Keterangan')
 
 @section('content')
+@php
+    $user = session('khanza_user');
+    $isAdmin = $user['role'] === 'admin';
+@endphp
 <div class="card" style="margin-bottom: 32px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(14, 165, 233, 0.05)); border-color: rgba(16, 185, 129, 0.2); position: relative;">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div>
@@ -36,16 +40,21 @@
         <div class="stat-label">Surat Ket. Sehat</div>
     </div>
 
-    <!-- Stat 2: Surat Ket Sakit -->
-    <div class="card" style="opacity: 0.65;">
+    <!-- Stat 2: Surat Ket Kelahiran -->
+    @php
+        $hasKelahiranBayiAccess = $isAdmin || (isset($user['permissions']['kelahiran_bayi']) && $user['permissions']['kelahiran_bayi'] === 'true');
+    @endphp
+    <div class="card" style="{{ !$hasKelahiranBayiAccess ? 'opacity: 0.5; cursor: not-allowed;' : '' }}">
         <div class="stat-icon warning">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 2 12 2Z"></path>
-                <path d="M12 6V12L16 14"></path>
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                <line x1="15" y1="9" x2="15.01" y2="9"></line>
             </svg>
         </div>
-        <div class="stat-number">{{ $stats['total_sakit'] }}</div>
-        <div class="stat-label">Surat Ket. Sakit (Segera Hadir)</div>
+        <div class="stat-number">{{ $stats['total_kelahiran'] }}</div>
+        <div class="stat-label">Surat Ket. Kelahiran Bayi</div>
     </div>
 
     <!-- Stat 3: Bebas Narkoba -->
@@ -63,9 +72,14 @@
 
 <div class="card" style="padding: 32px 0 0 0; overflow: hidden;">
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 32px 24px 32px; border-bottom: 1px solid var(--border-color);">
-        <h3 style="font-weight: 600; font-size: 1.15rem;">Surat Keterangan Sehat Terbaru</h3>
-        <div style="display: flex; gap: 12px;">
-            <a href="{{ route('surat.sehat.index') }}" class="btn btn-primary btn-sm">Buka Menu Surat Ket. Sehat</a>
+        <h3 style="font-weight: 600; font-size: 1.15rem;">Kelola Surat Keterangan Medis</h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            @if($isAdmin || (isset($user['permissions']['surat_keterangan_sehat']) && $user['permissions']['surat_keterangan_sehat'] === 'true'))
+                <a href="{{ route('surat.sehat.index') }}" class="btn btn-secondary btn-sm">Buka Surat Ket. Sehat</a>
+            @endif
+            @if($hasKelahiranBayiAccess)
+                <a href="{{ route('surat.kelahiran.index') }}" class="btn btn-primary btn-sm">Buka Surat Ket. Kelahiran Bayi</a>
+            @endif
         </div>
     </div>
 

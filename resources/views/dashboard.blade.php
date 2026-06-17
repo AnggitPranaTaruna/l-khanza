@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="card" style="margin-bottom: 40px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(16, 185, 129, 0.05)); border-color: rgba(14, 165, 233, 0.2); padding: 32px;">
-    <h2 style="font-weight: 700; font-size: 1.75rem; margin-bottom: 8px; letter-spacing: -0.025em;">Portal Aplikasi L-Khanza</h2>
+    <h2 style="font-weight: 700; font-size: 1.75rem; margin-bottom: 8px; letter-spacing: -0.025em;">Portal Aplikasi SIMRS KHANZA</h2>
     <p style="color: var(--text-secondary); max-width: 800px; font-size: 0.95rem;">
         Halo <strong>{{ session('khanza_user')['name'] }}</strong>, selamat datang kembali. 
         Silakan pilih salah satu modul aplikasi di bawah ini untuk masuk ke ruang kerja subsystem masing-masing.

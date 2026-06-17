@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - L-Khanza SIMRS</title>
+    <title>Masuk - SIMRS KHANZA</title>
     <script>
         (function () {
             const theme = localStorage.getItem('theme') || 'dark';
@@ -21,7 +21,7 @@
                     <path d="M2 17L12 22L22 17" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M2 12L12 17L22 12" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span>L-Khanza</span>
+                <span>SIMRS KHANZA</span>
             </div>
             <p class="login-subtitle">Sistem Informasi Manajemen Rumah Sakit</p>
         </div>

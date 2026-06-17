@@ -25,9 +25,13 @@ class DashboardController extends Controller
 
         // 1. Calculate Stats
         $stats = [
-            'total_pegawai' => DB::table('pegawai')->count(),
-            'pending_cuti' => DB::table('pengajuan_cuti')->where('status', 'Proses Pengajuan')->count(),
+            'total_surat' => DB::table('pengajuan_cuti')->count() + DB::table('pengajuan_tukar_jaga')->count(),
+            'pending_cuti' => DB::table('pengajuan_cuti')->whereIn('status', ['Proses Pengajuan', 'Disetujui PJ'])->count(),
             'approved_cuti' => DB::table('pengajuan_cuti')->where('status', 'Disetujui')->count(),
+            'rejected_cuti' => DB::table('pengajuan_cuti')->where('status', 'Ditolak')->count(),
+            'pending_tukar' => DB::table('pengajuan_tukar_jaga')->whereIn('status', ['Proses Pengajuan', 'Disetujui PJ'])->count(),
+            'approved_tukar' => DB::table('pengajuan_tukar_jaga')->where('status', 'Disetujui')->count(),
+            'rejected_tukar' => DB::table('pengajuan_tukar_jaga')->where('status', 'Ditolak')->count(),
         ];
 
         // 2. Retrieve Recent Leaves
@@ -45,7 +49,10 @@ class DashboardController extends Controller
                 ->get();
         } else {
             $recentLeaves = DB::table('pengajuan_cuti')
-                ->where('pengajuan_cuti.nik', $user['username'])
+                ->where(function($q) use ($user) {
+                    $q->where('pengajuan_cuti.nik', $user['username'])
+                      ->orWhere('pengajuan_cuti.nik_pj', $user['username']);
+                })
                 ->join('pegawai as p1', 'pengajuan_cuti.nik', '=', 'p1.nik')
                 ->leftJoin('pegawai as p2', 'pengajuan_cuti.nik_pj', '=', 'p2.nik')
                 ->select(
@@ -58,7 +65,32 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        return view('pegawai.dashboard', compact('stats', 'recentLeaves'));
+        // 3. Retrieve Recent Shift Swaps (Tukar Jaga)
+        $tukarQuery = DB::table('pengajuan_tukar_jaga')
+            ->join('pegawai as p1', 'pengajuan_tukar_jaga.nik_pemohon', '=', 'p1.nik')
+            ->join('pegawai as p2', 'pengajuan_tukar_jaga.nik_tukar', '=', 'p2.nik')
+            ->leftJoin('pegawai as p3', 'pengajuan_tukar_jaga.nik_pj', '=', 'p3.nik')
+            ->select(
+                'pengajuan_tukar_jaga.*',
+                'p1.nama as nama_pemohon',
+                'p2.nama as nama_tukar',
+                'p3.nama as nama_pj'
+            );
+
+        if (!$isAdmin) {
+            $tukarQuery->where(function($q) use ($user) {
+                $q->where('pengajuan_tukar_jaga.nik_pemohon', $user['username'])
+                  ->orWhere('pengajuan_tukar_jaga.nik_tukar', $user['username'])
+                  ->orWhere('pengajuan_tukar_jaga.nik_pj', $user['username']);
+            });
+        }
+
+        $recentTukar = $tukarQuery->orderBy('pengajuan_tukar_jaga.tanggal', 'desc')
+                                  ->orderBy('pengajuan_tukar_jaga.no_pengajuan', 'desc')
+                                  ->limit(5)
+                                  ->get();
+
+        return view('pegawai.dashboard', compact('stats', 'recentLeaves', 'recentTukar'));
     }
 
     /**
@@ -68,7 +100,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_sehat' => DB::table('surat_keterangan_sehat')->count(),
-            'total_sakit' => 0,
+            'total_kelahiran' => DB::table('pasien_bayi')->count(),
             'total_bebas_narkoba' => 0,
         ];
 

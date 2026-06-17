@@ -1,22 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Pengajuan Cuti Pegawai')
-@section('header_title', '::[ Pengajuan Cuti Pegawai ]::')
-
-
+@section('title', 'Pengajuan Tukar Jaga')
+@section('header_title', '::[ Pengajuan Tukar Jaga Pegawai ]::')
 
 @section('content')
 <!-- Input Form Container -->
 <div class="khanza-desktop-form">
     <div class="form-header">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
-        .: Input Data
+        .: Input Data Pengajuan Tukar Jaga
     </div>
     
     <div class="form-grid">
@@ -31,14 +28,21 @@
             </div>
             
             <div class="form-desktop-row">
-                <label>Diajukan Oleh :</label>
-                <input type="text" id="nik" class="input-desktop" style="width: 80px;" placeholder="NIK" value="{{ !$isAdmin ? $user['username'] : '' }}" readonly>
-                <input type="text" id="nama" class="input-desktop" style="width: 180px;" placeholder="Nama Pegawai" value="{{ !$isAdmin ? $user['name'] : '' }}" readonly>
+                <label>Pihak I (Pemohon) :</label>
+                <input type="text" id="nik_pemohon" class="input-desktop" style="width: 80px;" placeholder="NIK" value="{{ !$isAdmin ? $user['username'] : '' }}" readonly>
+                <input type="text" id="nama_pemohon" class="input-desktop" style="width: 180px;" placeholder="Nama Pegawai" value="{{ !$isAdmin ? $user['name'] : '' }}" readonly>
                 @if($isAdmin)
                     <button type="button" class="btn-lookup" id="btn-lookup-pemohon" onclick="openEmployeeLookup('pemohon')">📎</button>
                 @else
                     <button type="button" class="btn-lookup" disabled>📎</button>
                 @endif
+            </div>
+
+            <div class="form-desktop-row">
+                <label>Pihak II (Tukar) :</label>
+                <input type="text" id="nik_tukar" class="input-desktop" style="width: 80px;" placeholder="NIK Tukar" readonly>
+                <input type="text" id="nama_tukar" class="input-desktop" style="width: 180px;" placeholder="Nama Rekan Jaga" readonly>
+                <button type="button" class="btn-lookup" onclick="openEmployeeLookup('tukar')">📎</button>
             </div>
             
             <div class="form-desktop-row">
@@ -47,38 +51,18 @@
                 <input type="text" id="nama_pj" class="input-desktop" style="width: 180px;" placeholder="Nama Penanggung Jawab" readonly>
                 <button type="button" class="btn-lookup" onclick="openEmployeeLookup('pj')">📎</button>
             </div>
-            
-            <div class="form-desktop-row">
-                <label>Tanggal Cuti :</label>
-                <input type="date" id="tanggal_awal" class="input-desktop" style="width: 130px;">
-                <span style="color: var(--text-secondary);">s/d</span>
-                <input type="date" id="tanggal_akhir" class="input-desktop" style="width: 130px;">
-                
-                <label style="width: auto; margin-left: 10px; margin-right: 5px;" for="jumlah">Jml. Cuti :</label>
-                <input type="text" id="jumlah" class="input-desktop" style="width: 40px; text-align: center;" value="0" readonly>
-                <span style="font-size: 0.85rem; color: var(--text-secondary);">Hari</span>
-            </div>
-            
-            <div class="form-desktop-row">
-                <label for="status">Status :</label>
-                    <input type="text" id="status" class="input-desktop" style="width: 180px;" value="Proses Pengajuan" readonly>
-            </div>
         </div>
         
         <!-- Kolom Kanan -->
         <div>
             <div class="form-desktop-row">
-                <label for="urgensi">Jenis Cuti :</label>
-                <select id="urgensi" class="select-desktop" style="width: 180px;">
-                    <option value="Tahunan">Tahunan</option>
-                    <option value="Besar">Besar</option>
-                    <option value="Sakit">Sakit</option>
-                    <option value="Bersalin">Bersalin</option>
-                    <option value="Alasan Penting">Alasan Penting</option>
-                    <option value="Keterangan Lainnya">Keterangan Lainnya</option>
-                </select>
+                <label for="tanggal_tukar_mulai">Mulai Tukar :</label>
+                <input type="date" id="tanggal_tukar_mulai" class="input-desktop" style="width: 130px;" value="{{ \Carbon\Carbon::now()->addDay()->toDateString() }}">
+                
+                <label style="width: auto; margin-left: 15px; margin-right: 5px;" for="tanggal_tukar_akhir">s/d Tanggal :</label>
+                <input type="date" id="tanggal_tukar_akhir" class="input-desktop" style="width: 130px;" value="{{ \Carbon\Carbon::now()->addDay()->toDateString() }}">
             </div>
-            
+
             <div class="form-desktop-row">
                 <label>Bidang :</label>
                 <input type="text" id="bidang" class="input-desktop" style="width: 130px;" placeholder="Bidang" value="{{ !$isAdmin ? $user['permissions']['bidang_pemohon'] ?? '' : '' }}" readonly>
@@ -88,13 +72,13 @@
             </div>
             
             <div class="form-desktop-row" style="align-items: flex-start;">
-                <label for="alamat">Alamat Tujuan :</label>
-                <textarea id="alamat" class="textarea-desktop" style="width: 280px; height: 75px;" placeholder="Masukkan alamat tujuan cuti"></textarea>
+                <label for="alasan">Alasan Tukar :</label>
+                <textarea id="alasan" class="textarea-desktop" style="width: 280px; height: 65px;" placeholder="Masukkan alasan penukaran jadwal jaga"></textarea>
             </div>
-            
-            <div class="form-desktop-row" style="margin-top: 15px;">
-                <label for="kepentingan">Kepentingan Cuti :</label>
-                <input type="text" id="kepentingan" class="input-desktop" style="width: 280px;" placeholder="Keperluan/Kepentingan cuti">
+
+            <div class="form-desktop-row" style="margin-top: 5px;">
+                <label for="status">Status :</label>
+                    <input type="text" id="status" class="input-desktop" style="width: 180px;" value="Proses Pengajuan" readonly>
             </div>
         </div>
     </div>
@@ -143,108 +127,200 @@
 
     <!-- Data Table Container -->
     <div class="table-container">
-        <table class="data-table" id="cuti-table">
+        <table class="data-table" id="tukar-table">
             <thead>
                 <tr>
                     <th>No. Pengajuan</th>
                     <th>Tgl. Pengajuan</th>
-                    <th>NIK</th>
-                    <th>Nama Pemohon</th>
-                    <th>Jenis Cuti</th>
-                    <th>Tgl. Mulai</th>
-                    <th>Tgl. Selesai</th>
-                    <th>Jml. Cuti</th>
+                    <th>Pihak I (Pemohon)</th>
+                    <th>Pihak II (Tukar)</th>
+                    <th>Mulai Tukar</th>
+                    <th>Akhir Tukar</th>
+                    <th>Alasan</th>
                     <th>P.J. Terkait</th>
                     <th>Status</th>
                     <th style="text-align: center;">Aksi</th>
                 </tr>
             </thead>
-            <tbody id="cuti-table-body">
-                @if($cutiList->isEmpty())
+            <tbody id="tukar-table-body">
+                @if($tukarList->isEmpty())
                     <tr>
-                        <td colspan="11" style="padding: 40px; text-align: center; color: var(--text-secondary);">
-                            Belum ada pengajuan cuti yang tercatat.
+                        <td colspan="10" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                            Belum ada pengajuan tukar jaga yang tercatat.
                         </td>
                     </tr>
                 @else
-                    @foreach($cutiList as $c)
+                    @foreach($tukarList as $t)
                         <tr onclick="selectRow(this)" 
-                            data-no_pengajuan="{{ $c->no_pengajuan }}"
-                            data-tanggal="{{ $c->tanggal }}"
-                            data-nik="{{ $c->nik }}"
-                            data-nama="{{ $c->nama_pemohon }}"
-                            data-bidang="{{ $c->bidang_pemohon }}"
-                            data-departemen="{{ $c->departemen_pemohon }}"
-                            data-nik_pj="{{ $c->nik_pj }}"
-                            data-nama_pj="{{ $c->nama_pj }}"
-                            data-tanggal_awal="{{ $c->tanggal_awal }}"
-                            data-tanggal_akhir="{{ $c->tanggal_akhir }}"
-                            data-jumlah="{{ $c->jumlah }}"
-                            data-urgensi="{{ $c->urgensi }}"
-                            data-alamat="{{ $c->alamat }}"
-                            data-kepentingan="{{ $c->kepentingan }}"
-                            data-status="{{ $c->status }}">
-                            <td style="font-weight: 600; color: var(--primary);">{{ $c->no_pengajuan }}</td>
-                            <td>{{ $c->tanggal }}</td>
-                            <td>{{ $c->nik }}</td>
-                            <td style="font-weight: 500;">{{ $c->nama_pemohon }}</td>
-                            <td><span class="badge badge-info">{{ $c->urgensi }}</span></td>
-                            <td>{{ $c->tanggal_awal }}</td>
-                            <td>{{ $c->tanggal_akhir }}</td>
-                            <td style="text-align: center; font-weight: 600;">{{ $c->jumlah }} Hari</td>
-                            <td>{{ $c->nama_pj }}</td>
+                            data-no_pengajuan="{{ $t->no_pengajuan }}"
+                            data-tanggal="{{ $t->tanggal }}"
+                            data-tanggal_tukar_mulai="{{ $t->tanggal_tukar_mulai }}"
+                            data-tanggal_tukar_akhir="{{ $t->tanggal_tukar_akhir }}"
+                            data-nik_pemohon="{{ $t->nik_pemohon }}"
+                            data-nama_pemohon="{{ $t->nama_pemohon }}"
+                            data-bidang="{{ $t->bidang_pemohon }}"
+                            data-departemen="{{ $t->departemen_pemohon }}"
+                            data-nik_tukar="{{ $t->nik_tukar }}"
+                            data-nama_tukar="{{ $t->nama_tukar }}"
+                            data-nik_pj="{{ $t->nik_pj }}"
+                            data-nama_pj="{{ $t->nama_pj }}"
+                            data-alasan="{{ $t->alasan }}"
+                            data-status="{{ $t->status }}">
+                            <td style="font-weight: 600; color: var(--primary);">{{ $t->no_pengajuan }}</td>
+                            <td>{{ $t->tanggal }}</td>
+                            <td style="font-weight: 500;">{{ $t->nama_pemohon }} ({{ $t->nik_pemohon }})</td>
+                            <td style="font-weight: 500;">{{ $t->nama_tukar }} ({{ $t->nik_tukar }})</td>
+                            <td><strong>{{ \Carbon\Carbon::parse($t->tanggal_tukar_mulai)->translatedFormat('d-m-Y') }}</strong></td>
+                            <td><strong>{{ \Carbon\Carbon::parse($t->tanggal_tukar_akhir)->translatedFormat('d-m-Y') }}</strong></td>
+                            <td>{{ $t->alasan }}</td>
+                            <td>{{ $t->nama_pj }}</td>
                             <td>
-                                @if($c->status === 'Proses Pengajuan')
+                                @if($t->status === 'Proses Pengajuan')
                                     <span class="badge badge-warning">Proses PJ</span>
-                                @elseif($c->status === 'Disetujui PJ')
+                                @elseif($t->status === 'Disetujui PJ')
                                     <span class="badge badge-info">Disetujui PJ</span>
-                                @elseif($c->status === 'Disetujui')
+                                @elseif($t->status === 'Disetujui')
                                     <span class="badge badge-success">Disetujui HRD</span>
                                 @else
                                     <span class="badge badge-danger">Ditolak</span>
                                 @endif
                             </td>
-                            <td style="text-align: center;">
+                             <td style="text-align: center;">
                                 <div style="display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center;">
                                     @php
                                         $loggedInNik = session('khanza_user')['username'];
                                     @endphp
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); showDetailCuti('{{ $c->no_pengajuan }}', '{{ \Carbon\Carbon::parse($c->tanggal)->translatedFormat('d F Y') }}', '{{ $c->nama_pemohon }} ({{ $c->nik }})', '{{ $c->urgensi }}', '{{ \Carbon\Carbon::parse($c->tanggal_awal)->translatedFormat('d M Y') }} s.d. {{ \Carbon\Carbon::parse($c->tanggal_akhir)->translatedFormat('d M Y') }}', '{{ $c->jumlah }} Hari', '{{ addslashes($c->alamat) }}', '{{ addslashes($c->kepentingan) }}', '{{ $c->nama_pj }} ({{ $c->nik_pj }})', '{{ $c->status }}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center; background-color: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); showDetailTukar('{{ $t->no_pengajuan }}', '{{ \Carbon\Carbon::parse($t->tanggal)->translatedFormat('d F Y') }}', '{{ $t->nama_pemohon }} ({{ $t->nik_pemohon }})', '{{ $t->nama_tukar }} ({{ $t->nik_tukar }})', '{{ \Carbon\Carbon::parse($t->tanggal_tukar_mulai)->translatedFormat('d M Y') }} s.d. {{ \Carbon\Carbon::parse($t->tanggal_tukar_akhir)->translatedFormat('d M Y') }}', '{{ addslashes($t->alasan) }}', '{{ $t->nama_pj }} ({{ $t->nik_pj }})', '{{ $t->status }}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center; background-color: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">
                                         👁️ Detail
                                     </button>
-                                    @if($isAdmin && $c->status === 'Disetujui PJ')
+                                    @if($isAdmin && $t->status === 'Disetujui PJ')
                                         <div style="display: flex; gap: 4px; justify-content: center;">
-                                            <form action="{{ route('cuti.approve', $c->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                                            <form action="{{ route('tukar-jaga.approve', $t->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                                 @csrf
                                                 <button type="submit" class="btn btn-primary btn-sm" style="background-color: var(--success); padding: 4px 8px; font-size: 0.75rem;">Setujui (HRD)</button>
                                             </form>
-                                            <form action="{{ route('cuti.reject', $c->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                                            <form action="{{ route('tukar-jaga.reject', $t->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                                 @csrf
                                                 <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.75rem;">Tolak (HRD)</button>
                                             </form>
                                         </div>
-                                    @elseif(!$isAdmin && $c->nik_pj === $loggedInNik && $c->status === 'Proses Pengajuan')
+                                    @elseif(!$isAdmin && $t->nik_pj === $loggedInNik && $t->status === 'Proses Pengajuan')
                                         <div style="display: flex; gap: 4px; justify-content: center;">
-                                            <form action="{{ route('cuti.approve-pj', $c->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                                            <form action="{{ route('tukar-jaga.approve-pj', $t->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                                 @csrf
                                                 <button type="submit" class="btn btn-primary btn-sm" style="background-color: var(--primary); padding: 4px 8px; font-size: 0.75rem;">Setujui (PJ)</button>
                                             </form>
-                                            <form action="{{ route('cuti.reject-pj', $c->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                                            <form action="{{ route('tukar-jaga.reject-pj', $t->no_pengajuan) }}" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                                 @csrf
                                                 <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.75rem;">Tolak (PJ)</button>
                                             </form>
                                         </div>
                                     @endif
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="event.stopPropagation(); printDirect('{{ $c->no_pengajuan }}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center;">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="event.stopPropagation(); printDirect('{{ $t->no_pengajuan }}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center;">
                                         🖨️ Cetak
                                     </button>
                                 </div>
-                            </td>
+                             </td>
                         </tr>
                     @endforeach
                 @endif
             </tbody>
         </table>
+    </div>
+</div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Tukar Jaga Detail Modal -->
+<div class="modal-overlay" id="tukar-detail-modal">
+    <div class="modal-box" style="max-width: 600px;">
+        <div class="modal-header">
+            <span>Detail Pengajuan Tukar Jaga</span>
+            <button class="modal-close" onclick="closeTukarModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+            <div style="border: 1px dashed var(--border-color); border-radius: 8px; padding: 20px; background-color: rgba(255, 255, 255, 0.01);">
+                <div style="text-align: center; margin-bottom: 20px; border-bottom: 1.5px double var(--border-color); padding-bottom: 15px;">
+                    <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--primary);">FORMULIR PENGAJUAN TUKAR JAGA</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 0.8rem; color: var(--text-secondary);" id="detail-tukar-no"></p>
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 8px 0; color: var(--text-secondary); width: 180px;">Tgl. Pengajuan</td>
+                        <td style="padding: 8px 4px; color: var(--text-secondary); width: 15px;">:</td>
+                        <td style="padding: 8px 0; font-weight: 500;" id="detail-tukar-tanggal"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 8px 0; color: var(--text-secondary);">Pihak I (Pemohon)</td>
+                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
+                        <td style="padding: 8px 0; font-weight: 600;" id="detail-tukar-pihak1"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 8px 0; color: var(--text-secondary);">Pihak II (Rekan Pengganti)</td>
+                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
+                        <td style="padding: 8px 0; font-weight: 600;" id="detail-tukar-pihak2"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 8px 0; color: var(--text-secondary);">Tanggal Swap (Tukar)</td>
+                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
+                        <td style="padding: 8px 0; font-weight: 600; color: var(--warning);" id="detail-tukar-waktu"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 8px 0; color: var(--text-secondary);">Alasan Tukar Jaga</td>
+                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
+                        <td style="padding: 8px 0;" id="detail-tukar-alasan"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 8px 0; color: var(--text-secondary);">Penanggung Jawab (PJ)</td>
+                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
+                        <td style="padding: 8px 0; font-weight: 500;" id="detail-tukar-pj"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: var(--text-secondary);">Status Pengajuan</td>
+                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
+                        <td style="padding: 8px 0;" id="detail-tukar-status"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Workflow Status Step Progress -->
+            <div style="margin-top: 24px; padding: 15px; background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 8px;">
+                <h5 style="margin: 0 0 15px 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">Alur Persetujuan</h5>
+                <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+                    <!-- Line in background -->
+                    <div style="position: absolute; top: 15px; left: 10%; right: 10%; height: 2px; background-color: var(--border-color); z-index: 1;" id="tukar-workflow-line"></div>
+                    
+                    <!-- Step 1: Diajukan -->
+                    <div style="display: flex; flex-direction: column; align-items: center; z-index: 2; width: 30%;">
+                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8rem;" id="tukar-step-diajukan-circle">✓</div>
+                        <div style="font-size: 0.75rem; margin-top: 6px; font-weight: 600; color: var(--text-primary);">Diajukan</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">Oleh Pemohon</div>
+                    </div>
+                    
+                    <!-- Step 2: Penanggung Jawab -->
+                    <div style="display: flex; flex-direction: column; align-items: center; z-index: 2; width: 30%;">
+                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-weight: bold; font-size: 0.8rem;" id="tukar-step-pj-circle">2</div>
+                        <div style="font-size: 0.75rem; margin-top: 6px; font-weight: 600; color: var(--text-secondary);" id="tukar-step-pj-label">Persetujuan PJ</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);" id="tukar-step-pj-sub">Belum Diperiksa</div>
+                    </div>
+                    
+                    <!-- Step 3: HRD -->
+                    <div style="display: flex; flex-direction: column; align-items: center; z-index: 2; width: 30%;">
+                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-weight: bold; font-size: 0.8rem;" id="tukar-step-hrd-circle">3</div>
+                        <div style="font-size: 0.75rem; margin-top: 6px; font-weight: 600; color: var(--text-secondary);" id="tukar-step-hrd-label">Persetujuan HRD</div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);" id="tukar-step-hrd-sub">Belum Diperiksa</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeTukarModal()" style="font-size: 0.85rem; padding: 8px 16px;">Tutup</button>
+                <button type="button" class="btn btn-primary" id="btn-cetak-tukar-modal" onclick="printTukarFromModal()" style="font-size: 0.85rem; padding: 8px 16px;">🖨️ Cetak Surat</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -278,157 +354,25 @@
         </div>
     </div>
 </div>
-
-<!-- Cuti Detail Modal -->
-<div class="modal-overlay" id="cuti-detail-modal">
-    <div class="modal-box" style="max-width: 600px;">
-        <div class="modal-header">
-            <span>Detail Pengajuan Cuti</span>
-            <button class="modal-close" onclick="closeCutiModal()">&times;</button>
-        </div>
-        <div class="modal-body" style="padding: 24px;">
-            <div style="border: 1px dashed var(--border-color); border-radius: 8px; padding: 20px; background-color: rgba(255, 255, 255, 0.01);">
-                <div style="text-align: center; margin-bottom: 20px; border-bottom: 1.5px double var(--border-color); padding-bottom: 15px;">
-                    <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--primary);">SURAT PENGAJUAN CUTI PEGAWAI</h4>
-                    <p style="margin: 5px 0 0 0; font-size: 0.8rem; color: var(--text-secondary);" id="detail-cuti-no"></p>
-                </div>
-                
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary); width: 180px;">Tgl. Pengajuan</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary); width: 15px;">:</td>
-                        <td style="padding: 8px 0; font-weight: 500;" id="detail-cuti-tanggal"></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Pemohon</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0; font-weight: 600;" id="detail-cuti-pemohon"></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Jenis Cuti / Urgensi</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0;" id="detail-cuti-urgensi"></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Waktu Pelaksanaan</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0; font-weight: 500;" id="detail-cuti-waktu"></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Durasi</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0; font-weight: 600; color: var(--warning);" id="detail-cuti-durasi"></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Alamat selama Cuti</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0;" id="detail-cuti-alamat"></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Alasan/Kepentingan</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0;" id="detail-cuti-kepentingan"></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Penanggung Jawab (PJ)</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0; font-weight: 500;" id="detail-cuti-pj"></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px 0; color: var(--text-secondary);">Status Pengajuan</td>
-                        <td style="padding: 8px 4px; color: var(--text-secondary);">:</td>
-                        <td style="padding: 8px 0;" id="detail-cuti-status"></td>
-                    </tr>
-                </table>
-            </div>
-            
-            <!-- Workflow Status Step Progress -->
-            <div style="margin-top: 24px; padding: 15px; background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 8px;">
-                <h5 style="margin: 0 0 15px 0; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">Alur Persetujuan</h5>
-                <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
-                    <!-- Line in background -->
-                    <div style="position: absolute; top: 15px; left: 10%; right: 10%; height: 2px; background-color: var(--border-color); z-index: 1;" id="workflow-line"></div>
-                    
-                    <!-- Step 1: Diajukan -->
-                    <div style="display: flex; flex-direction: column; align-items: center; z-index: 2; width: 30%;">
-                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8rem;" id="step-diajukan-circle">✓</div>
-                        <div style="font-size: 0.75rem; margin-top: 6px; font-weight: 600; color: var(--text-primary);">Diajukan</div>
-                        <div style="font-size: 0.65rem; color: var(--text-secondary);">Oleh Pemohon</div>
-                    </div>
-                    
-                    <!-- Step 2: Penanggung Jawab -->
-                    <div style="display: flex; flex-direction: column; align-items: center; z-index: 2; width: 30%;">
-                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-weight: bold; font-size: 0.8rem;" id="step-pj-circle">2</div>
-                        <div style="font-size: 0.75rem; margin-top: 6px; font-weight: 600; color: var(--text-secondary);" id="step-pj-label">Persetujuan PJ</div>
-                        <div style="font-size: 0.65rem; color: var(--text-secondary);" id="step-pj-sub">Belum Diperiksa</div>
-                    </div>
-                    
-                    <!-- Step 3: HRD -->
-                    <div style="display: flex; flex-direction: column; align-items: center; z-index: 2; width: 30%;">
-                        <div style="width: 30px; height: 30px; border-radius: 50%; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-weight: bold; font-size: 0.8rem;" id="step-hrd-circle">3</div>
-                        <div style="font-size: 0.75rem; margin-top: 6px; font-weight: 600; color: var(--text-secondary);" id="step-hrd-label">Persetujuan HRD</div>
-                        <div style="font-size: 0.65rem; color: var(--text-secondary);" id="step-hrd-sub">Belum Diperiksa</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-secondary" onclick="closeCutiModal()" style="font-size: 0.85rem; padding: 8px 16px;">Tutup</button>
-                <button type="button" class="btn btn-primary" id="btn-cetak-cuti-modal" onclick="printCutiFromModal()" style="font-size: 0.85rem; padding: 8px 16px;">🖨️ Cetak Surat</button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
 <script>
-    let lookupType = 'pemohon'; // 'pemohon' or 'pj'
+    let lookupType = 'pemohon'; // 'pemohon', 'tukar', 'pj'
     let selectedNoPengajuan = null;
     const isAdmin = {{ $isAdmin ? 'true' : 'false' }};
     const loggedInNik = '{{ session('khanza_user')['username'] }}';
 
     document.addEventListener('DOMContentLoaded', function() {
-        const tglAwalInput = document.getElementById('tanggal_awal');
-        const tglAkhirInput = document.getElementById('tanggal_akhir');
         const tanggalInput = document.getElementById('tanggal');
 
-        // Auto calculate days when date inputs change
-        tglAwalInput.addEventListener('change', calculateDays);
-        tglAkhirInput.addEventListener('change', calculateDays);
-
-        // Fetch new number when main date changes (for new entries)
+        // Fetch new number when main date changes
         tanggalInput.addEventListener('change', function() {
             if (!selectedNoPengajuan) {
                 fetchNextNoPengajuan(this.value);
             }
         });
     });
-
-    // Calculate duration in days
-    function calculateDays() {
-        const tglAwal = document.getElementById('tanggal_awal').value;
-        const tglAkhir = document.getElementById('tanggal_akhir').value;
-        const jumlahInput = document.getElementById('jumlah');
-
-        if (tglAwal && tglAkhir) {
-            const date1 = new Date(tglAwal);
-            const date2 = new Date(tglAkhir);
-            
-            date1.setHours(0,0,0,0);
-            date2.setHours(0,0,0,0);
-
-            if (date2 >= date1) {
-                const diffTime = Math.abs(date2 - date1);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                jumlahInput.value = diffDays;
-            } else {
-                jumlahInput.value = 0;
-            }
-        } else {
-            jumlahInput.value = 0;
-        }
-    }
 
     // Toggle date search filter fields
     function toggleDateFilter() {
@@ -439,7 +383,7 @@
 
     // Fetch next sequential document number
     function fetchNextNoPengajuan(date) {
-        fetch(`{{ url('/cuti/new-no') }}?tanggal=${date}`)
+        fetch(`{{ url('/tukar-jaga/new-no') }}?tanggal=${date}`)
             .then(res => res.json())
             .then(data => {
                 document.getElementById('no_pengajuan').value = data.no_pengajuan;
@@ -450,7 +394,11 @@
     // Modal lookup controls
     function openEmployeeLookup(type) {
         lookupType = type;
-        document.getElementById('lookup-modal-title').innerText = type === 'pemohon' ? 'Pilih Pegawai Pemohon' : 'Pilih Penanggung Jawab (PJ)';
+        let title = 'Pilih Pegawai Pemohon';
+        if (type === 'tukar') title = 'Pilih Pihak II (Rekan Tukar Jaga)';
+        if (type === 'pj') title = 'Pilih Penanggung Jawab (PJ)';
+        
+        document.getElementById('lookup-modal-title').innerText = title;
         document.getElementById('lookup-search').value = '';
         document.getElementById('lookup-modal').classList.add('active');
         fetchLookupEmployees();
@@ -462,7 +410,7 @@
 
     function fetchLookupEmployees() {
         const keyword = document.getElementById('lookup-search').value;
-        fetch(`{{ url('/cuti/employees') }}?search=${keyword}`)
+        fetch(`{{ url('/tukar-jaga/employees') }}?search=${keyword}`)
             .then(res => res.json())
             .then(res => {
                 const tbody = document.getElementById('lookup-table-body');
@@ -494,10 +442,13 @@
 
     function selectEmployee(nik, nama, bidang, departemen) {
         if (lookupType === 'pemohon') {
-            document.getElementById('nik').value = nik;
-            document.getElementById('nama').value = nama;
+            document.getElementById('nik_pemohon').value = nik;
+            document.getElementById('nama_pemohon').value = nama;
             document.getElementById('bidang').value = bidang;
             document.getElementById('departemen').value = departemen;
+        } else if (lookupType === 'tukar') {
+            document.getElementById('nik_tukar').value = nik;
+            document.getElementById('nama_tukar').value = nama;
         } else {
             document.getElementById('nik_pj').value = nik;
             document.getElementById('nama_pj').value = nama;
@@ -507,35 +458,27 @@
 
     // Select row in the main list table
     function selectRow(trElement) {
-        // Remove selection highlight from all rows
-        document.querySelectorAll('#cuti-table-body tr').forEach(r => r.classList.remove('selected-row'));
-        
-        // Add highlight to selected row
+        document.querySelectorAll('#tukar-table-body tr').forEach(r => r.classList.remove('selected-row'));
         trElement.classList.add('selected-row');
 
         // Populate fields
         selectedNoPengajuan = trElement.getAttribute('data-no_pengajuan');
         document.getElementById('no_pengajuan').value = selectedNoPengajuan;
         document.getElementById('tanggal').value = trElement.getAttribute('data-tanggal');
-        document.getElementById('nik').value = trElement.getAttribute('data-nik');
-        document.getElementById('nama').value = trElement.getAttribute('data-nama');
+        document.getElementById('tanggal_tukar_mulai').value = trElement.getAttribute('data-tanggal_tukar_mulai');
+        document.getElementById('tanggal_tukar_akhir').value = trElement.getAttribute('data-tanggal_tukar_akhir');
+        document.getElementById('nik_pemohon').value = trElement.getAttribute('data-nik_pemohon');
+        document.getElementById('nama_pemohon').value = trElement.getAttribute('data-nama_pemohon');
         document.getElementById('bidang').value = trElement.getAttribute('data-bidang');
         document.getElementById('departemen').value = trElement.getAttribute('data-departemen');
+        document.getElementById('nik_tukar').value = trElement.getAttribute('data-nik_tukar');
+        document.getElementById('nama_tukar').value = trElement.getAttribute('data-nama_tukar');
         document.getElementById('nik_pj').value = trElement.getAttribute('data-nik_pj');
         document.getElementById('nama_pj').value = trElement.getAttribute('data-nama_pj');
-        document.getElementById('tanggal_awal').value = trElement.getAttribute('data-tanggal_awal');
-        document.getElementById('tanggal_akhir').value = trElement.getAttribute('data-tanggal_akhir');
-        document.getElementById('jumlah').value = trElement.getAttribute('data-jumlah');
-        document.getElementById('urgensi').value = trElement.getAttribute('data-urgensi');
-        document.getElementById('alamat').value = trElement.getAttribute('data-alamat');
-        document.getElementById('kepentingan').value = trElement.getAttribute('data-kepentingan');
+        document.getElementById('alasan').value = trElement.getAttribute('data-alasan');
 
         const statusEl = document.getElementById('status');
-        if (statusEl.tagName === 'SELECT') {
-            statusEl.value = trElement.getAttribute('data-status');
-        } else {
-            statusEl.value = trElement.getAttribute('data-status');
-        }
+        statusEl.value = trElement.getAttribute('data-status');
 
         // Configure buttons
         document.getElementById('btn-simpan').disabled = true;
@@ -547,39 +490,34 @@
     // Reset Form (Baru button)
     function resetForm() {
         selectedNoPengajuan = null;
-        document.querySelectorAll('#cuti-table-body tr').forEach(r => r.classList.remove('selected-row'));
+        document.querySelectorAll('#tukar-table-body tr').forEach(r => r.classList.remove('selected-row'));
 
         const currentDate = '{{ \Carbon\Carbon::now()->toDateString() }}';
         document.getElementById('tanggal').value = currentDate;
+        document.getElementById('tanggal_tukar_mulai').value = '{{ \Carbon\Carbon::now()->addDay()->toDateString() }}';
+        document.getElementById('tanggal_tukar_akhir').value = '{{ \Carbon\Carbon::now()->addDay()->toDateString() }}';
         fetchNextNoPengajuan(currentDate);
 
         if (isAdmin) {
-            document.getElementById('nik').value = '';
-            document.getElementById('nama').value = '';
+            document.getElementById('nik_pemohon').value = '';
+            document.getElementById('nama_pemohon').value = '';
             document.getElementById('bidang').value = '';
             document.getElementById('departemen').value = '';
         } else {
-            document.getElementById('nik').value = '{{ $user['username'] }}';
-            document.getElementById('nama').value = '{{ $user['name'] }}';
+            document.getElementById('nik_pemohon').value = '{{ $user['username'] }}';
+            document.getElementById('nama_pemohon').value = '{{ $user['name'] }}';
             document.getElementById('bidang').value = '{{ $user['permissions']['bidang_pemohon'] ?? '' }}';
             document.getElementById('departemen').value = '{{ $user['permissions']['departemen_pemohon'] ?? '' }}';
         }
         
+        document.getElementById('nik_tukar').value = '';
+        document.getElementById('nama_tukar').value = '';
         document.getElementById('nik_pj').value = '';
         document.getElementById('nama_pj').value = '';
-        document.getElementById('tanggal_awal').value = '';
-        document.getElementById('tanggal_akhir').value = '';
-        document.getElementById('jumlah').value = 0;
-        document.getElementById('urgensi').value = 'Tahunan';
-        document.getElementById('alamat').value = '';
-        document.getElementById('kepentingan').value = '';
+        document.getElementById('alasan').value = '';
         
         const statusEl = document.getElementById('status');
-        if (statusEl.tagName === 'SELECT') {
-            statusEl.value = 'Proses Pengajuan';
-        } else {
-            statusEl.value = 'Proses Pengajuan';
-        }
+        statusEl.value = 'Proses Pengajuan';
 
         document.getElementById('btn-simpan').disabled = false;
         document.getElementById('btn-ganti').disabled = true;
@@ -595,7 +533,7 @@
         const btnSimpan = document.getElementById('btn-simpan');
         btnSimpan.disabled = true;
 
-        fetch(`{{ url('/cuti') }}`, {
+        fetch(`{{ url('/tukar-jaga') }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -607,8 +545,9 @@
         .then(res => res.json())
         .then(res => {
             btnSimpan.disabled = false;
-            if (res.status === 'success') {
-                if (confirm(res.message + '\n\nApakah Anda ingin langsung mencetak surat pengajuan cuti ini?')) {
+            if (res.status === 'success' || res.message) {
+                const msg = res.message || 'Pengajuan tukar jaga berhasil disimpan.';
+                if (confirm(msg + '\n\nApakah Anda ingin langsung mencetak surat pengajuan ini?')) {
                     printDirect(payload.no_pengajuan);
                 }
                 resetForm();
@@ -632,7 +571,7 @@
         const btnGanti = document.getElementById('btn-ganti');
         btnGanti.disabled = true;
 
-        fetch(`{{ url('/cuti') }}/${selectedNoPengajuan}`, {
+        fetch(`{{ url('/tukar-jaga') }}/${selectedNoPengajuan}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -644,8 +583,9 @@
         .then(res => res.json())
         .then(res => {
             btnGanti.disabled = false;
-            if (res.status === 'success') {
-                if (confirm(res.message + '\n\nApakah Anda ingin mencetak surat pengajuan cuti ini?')) {
+            if (res.status === 'success' || res.message) {
+                const msg = res.message || 'Pengajuan tukar jaga berhasil diubah.';
+                if (confirm(msg + '\n\nApakah Anda ingin mencetak surat pengajuan ini?')) {
                     printDirect(selectedNoPengajuan);
                 }
                 resetForm();
@@ -668,7 +608,7 @@
         const btnHapus = document.getElementById('btn-hapus');
         btnHapus.disabled = true;
 
-        fetch(`{{ url('/cuti') }}/${selectedNoPengajuan}`, {
+        fetch(`{{ url('/tukar-jaga') }}/${selectedNoPengajuan}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -679,8 +619,8 @@
         .then(res => res.json())
         .then(res => {
             btnHapus.disabled = false;
-            if (res.status === 'success') {
-                alert(res.message);
+            if (res.status === 'success' || res.message) {
+                alert(res.message || 'Pengajuan tukar jaga berhasil dihapus.');
                 resetForm();
                 refreshTable();
             } else {
@@ -699,29 +639,26 @@
         return {
             no_pengajuan: document.getElementById('no_pengajuan').value,
             tanggal: document.getElementById('tanggal').value,
-            nik: document.getElementById('nik').value,
+            tanggal_tukar_mulai: document.getElementById('tanggal_tukar_mulai').value,
+            tanggal_tukar_akhir: document.getElementById('tanggal_tukar_akhir').value,
+            nik_pemohon: document.getElementById('nik_pemohon').value,
+            nik_tukar: document.getElementById('nik_tukar').value,
+            alasan: document.getElementById('alasan').value,
             nik_pj: document.getElementById('nik_pj').value,
-            tanggal_awal: document.getElementById('tanggal_awal').value,
-            tanggal_akhir: document.getElementById('tanggal_akhir').value,
-            urgensi: document.getElementById('urgensi').value,
-            alamat: document.getElementById('alamat').value,
-            kepentingan: document.getElementById('kepentingan').value,
             status: document.getElementById('status').value || document.getElementById('status').getAttribute('value')
         };
     }
 
     function validatePayload(payload) {
         if (!payload.no_pengajuan) { alert('Nomor pengajuan tidak boleh kosong.'); return false; }
-        if (!payload.nik) { alert('Pegawai pengaju harus dipilih.'); return false; }
+        if (!payload.nik_pemohon) { alert('Pihak I (Pemohon) harus dipilih.'); return false; }
+        if (!payload.nik_tukar) { alert('Pihak II (Rekan Tukar) harus dipilih.'); return false; }
+        if (payload.nik_pemohon === payload.nik_tukar) { alert('Pemohon dan Rekan Tukar tidak boleh orang yang sama.'); return false; }
+        if (!payload.tanggal_tukar_mulai) { alert('Tanggal mulai tukar tidak boleh kosong.'); return false; }
+        if (!payload.tanggal_tukar_akhir) { alert('Tanggal akhir tukar tidak boleh kosong.'); return false; }
+        if (new Date(payload.tanggal_tukar_mulai) > new Date(payload.tanggal_tukar_akhir)) { alert('Tanggal akhir tukar tidak boleh sebelum tanggal mulai.'); return false; }
         if (!payload.nik_pj) { alert('Penanggung Jawab (PJ) harus dipilih.'); return false; }
-        if (!payload.tanggal_awal) { alert('Tanggal awal cuti tidak boleh kosong.'); return false; }
-        if (!payload.tanggal_akhir) { alert('Tanggal akhir cuti tidak boleh kosong.'); return false; }
-        if (new Date(payload.tanggal_akhir) < new Date(payload.tanggal_awal)) {
-            alert('Tanggal akhir tidak boleh mendahului tanggal awal.');
-            return false;
-        }
-        if (!payload.alamat) { alert('Alamat tujuan tidak boleh kosong.'); return false; }
-        if (!payload.kepentingan) { alert('Kepentingan cuti tidak boleh kosong.'); return false; }
+        if (!payload.alasan) { alert('Alasan penukaran jadwal jaga tidak boleh kosong.'); return false; }
         return true;
     }
 
@@ -732,7 +669,7 @@
     }
 
     function printDirect(noPengajuan) {
-        const url = `{{ url('/cuti') }}/${encodeURIComponent(noPengajuan)}/cetak`;
+        const url = `{{ url('/tukar-jaga') }}/${encodeURIComponent(noPengajuan)}/cetak`;
         window.open(url, '_blank');
     }
 
@@ -743,74 +680,79 @@
         const tglAkhir = document.getElementById('filter-tgl-akhir').value;
         const keyword = document.getElementById('search-keyword').value;
 
-        fetch(`{{ url('/cuti') }}?use_date_filter=${useDateFilter}&tgl_awal=${tglAwal}&tgl_akhir=${tglAkhir}&search=${keyword}`, {
+        fetch(`{{ url('/tukar-jaga') }}?use_date_filter=${useDateFilter}&tgl_awal=${tglAwal}&tgl_akhir=${tglAkhir}&search=${keyword}`, {
             headers: { 'Accept': 'application/json' }
         })
         .then(res => res.json())
         .then(res => {
-            const tbody = document.getElementById('cuti-table-body');
+            const tbody = document.getElementById('tukar-table-body');
             tbody.innerHTML = '';
 
             if (res.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="padding: 40px; text-align: center; color: var(--text-secondary);">Tidak ada data pengajuan cuti yang ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="padding: 40px; text-align: center; color: var(--text-secondary);">Tidak ada data pengajuan tukar jaga yang ditemukan.</td></tr>';
                 return;
             }
 
-            res.data.forEach(c => {
+            res.data.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.onclick = function() { selectRow(tr); };
                 
-                tr.setAttribute('data-no_pengajuan', c.no_pengajuan);
-                tr.setAttribute('data-tanggal', c.tanggal);
-                tr.setAttribute('data-nik', c.nik);
-                tr.setAttribute('data-nama', c.nama_pemohon);
-                tr.setAttribute('data-bidang', c.bidang_pemohon || '');
-                tr.setAttribute('data-departemen', c.departemen_pemohon || '');
-                tr.setAttribute('data-nik_pj', c.nik_pj);
-                tr.setAttribute('data-nama_pj', c.nama_pj || '');
-                tr.setAttribute('data-tanggal_awal', c.tanggal_awal);
-                tr.setAttribute('data-tanggal_akhir', c.tanggal_akhir);
-                tr.setAttribute('data-jumlah', c.jumlah);
-                tr.setAttribute('data-urgensi', c.urgensi);
-                tr.setAttribute('data-alamat', c.alamat);
-                tr.setAttribute('data-kepentingan', c.kepentingan);
-                tr.setAttribute('data-status', c.status);
+                tr.setAttribute('data-no_pengajuan', t.no_pengajuan);
+                tr.setAttribute('data-tanggal', t.tanggal);
+                tr.setAttribute('data-tanggal_tukar_mulai', t.tanggal_tukar_mulai);
+                tr.setAttribute('data-tanggal_tukar_akhir', t.tanggal_tukar_akhir);
+                tr.setAttribute('data-nik_pemohon', t.nik_pemohon);
+                tr.setAttribute('data-nama_pemohon', t.nama_pemohon);
+                tr.setAttribute('data-bidang', t.bidang_pemohon || '');
+                tr.setAttribute('data-departemen', t.departemen_pemohon || '');
+                tr.setAttribute('data-nik_tukar', t.nik_tukar);
+                tr.setAttribute('data-nama_tukar', t.nama_tukar || '');
+                tr.setAttribute('data-nik_pj', t.nik_pj);
+                tr.setAttribute('data-nama_pj', t.nama_pj || '');
+                tr.setAttribute('data-alasan', t.alasan);
+                tr.setAttribute('data-status', t.status);
 
                 let badgeStatus = 'badge-warning';
                 let statusLabel = 'Proses PJ';
-                if (c.status === 'Disetujui PJ') {
+                if (t.status === 'Disetujui PJ') {
                     badgeStatus = 'badge-info';
                     statusLabel = 'Disetujui PJ';
-                } else if (c.status === 'Disetujui') {
+                } else if (t.status === 'Disetujui') {
                     badgeStatus = 'badge-success';
                     statusLabel = 'Disetujui HRD';
-                } else if (c.status === 'Ditolak') {
+                } else if (t.status === 'Ditolak') {
                     badgeStatus = 'badge-danger';
                     statusLabel = 'Ditolak';
                 }
 
+                // Format tanggal tukar
+                const partsMulai = t.tanggal_tukar_mulai.split('-');
+                const formattedTglTukarMulai = `${partsMulai[2]}-${partsMulai[1]}-${partsMulai[0]}`;
+                const partsAkhir = t.tanggal_tukar_akhir.split('-');
+                const formattedTglTukarAkhir = `${partsAkhir[2]}-${partsAkhir[1]}-${partsAkhir[0]}`;
+
                 let actionHtml = '';
-                if (isAdmin && c.status === 'Disetujui PJ') {
+                if (isAdmin && t.status === 'Disetujui PJ') {
                     actionHtml = `
                         <div style="display: flex; gap: 4px; justify-content: center;">
-                            <form action="{{ url('/cuti') }}/${encodeURIComponent(c.no_pengajuan)}/approve" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                            <form action="{{ url('/tukar-jaga') }}/${encodeURIComponent(t.no_pengajuan)}/approve" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-primary btn-sm" style="background-color: var(--success); padding: 4px 8px; font-size: 0.75rem;">Setujui (HRD)</button>
                             </form>
-                            <form action="{{ url('/cuti') }}/${encodeURIComponent(c.no_pengajuan)}/reject" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                            <form action="{{ url('/tukar-jaga') }}/${encodeURIComponent(t.no_pengajuan)}/reject" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.75rem;">Tolak (HRD)</button>
                             </form>
                         </div>
                     `;
-                } else if (!isAdmin && c.nik_pj === loggedInNik && c.status === 'Proses Pengajuan') {
+                } else if (!isAdmin && t.nik_pj === loggedInNik && t.status === 'Proses Pengajuan') {
                     actionHtml = `
                         <div style="display: flex; gap: 4px; justify-content: center;">
-                            <form action="{{ url('/cuti') }}/${encodeURIComponent(c.no_pengajuan)}/approve-pj" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                            <form action="{{ url('/tukar-jaga') }}/${encodeURIComponent(t.no_pengajuan)}/approve-pj" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-primary btn-sm" style="background-color: var(--primary); padding: 4px 8px; font-size: 0.75rem;">Setujui (PJ)</button>
                             </form>
-                            <form action="{{ url('/cuti') }}/${encodeURIComponent(c.no_pengajuan)}/reject-pj" method="POST" style="display:inline;" onclick="event.stopPropagation();">
+                            <form action="{{ url('/tukar-jaga') }}/${encodeURIComponent(t.no_pengajuan)}/reject-pj" method="POST" style="display:inline;" onclick="event.stopPropagation();">
                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.75rem;">Tolak (PJ)</button>
                             </form>
@@ -819,23 +761,22 @@
                 }
 
                 tr.innerHTML = `
-                    <td style="font-weight: 600; color: var(--primary);">${c.no_pengajuan}</td>
-                    <td>${c.tanggal}</td>
-                    <td>${c.nik}</td>
-                    <td style="font-weight: 500;">${c.nama_pemohon}</td>
-                    <td><span class="badge badge-info">${c.urgensi}</span></td>
-                    <td>${c.tanggal_awal}</td>
-                    <td>${c.tanggal_akhir}</td>
-                    <td style="text-align: center; font-weight: 600;">${c.jumlah} Hari</td>
-                    <td>${c.nama_pj || ''}</td>
+                    <td style="font-weight: 600; color: var(--primary);">${t.no_pengajuan}</td>
+                    <td>${t.tanggal}</td>
+                    <td style="font-weight: 500;">${t.nama_pemohon} (${t.nik_pemohon})</td>
+                    <td style="font-weight: 500;">${t.nama_tukar} (${t.nik_tukar})</td>
+                    <td><strong>${formattedTglTukarMulai}</strong></td>
+                    <td><strong>${formattedTglTukarAkhir}</strong></td>
+                    <td>${t.alasan}</td>
+                    <td>${t.nama_pj || ''}</td>
                     <td><span class="badge ${badgeStatus}">${statusLabel}</span></td>
                     <td style="text-align: center;">
                         <div style="display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); showDetailCuti('${c.no_pengajuan}', '${c.tanggal}', '${c.nama_pemohon} (${c.nik})', '${c.urgensi}', '${c.tanggal_awal} s.d. ${c.tanggal_akhir}', '${c.jumlah} Hari', '${c.alamat.replace(/'/g, "\\'")}', '${c.kepentingan.replace(/'/g, "\\'")}', '${c.nama_pj} (${c.nik_pj})', '${c.status}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center; background-color: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); showDetailTukar('${t.no_pengajuan}', '${t.tanggal}', '${t.nama_pemohon} (${t.nik_pemohon})', '${t.nama_tukar} (${t.nik_tukar})', '${formattedTglTukarMulai} s.d. ${formattedTglTukarAkhir}', '${t.alasan.replace(/'/g, "\\'")}', '${t.nama_pj} (${t.nik_pj})', '${t.status}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center; background-color: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">
                                 👁️ Detail
                             </button>
                             ${actionHtml}
-                            <button type="button" class="btn btn-primary btn-sm" onclick="event.stopPropagation(); printDirect('${c.no_pengajuan}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="event.stopPropagation(); printDirect('${t.no_pengajuan}')" style="padding: 4px 10px; font-size: 0.75rem; width: 100%; justify-content: center;">
                                 🖨️ Cetak
                             </button>
                         </div>
@@ -860,19 +801,17 @@
         refreshTable();
     }
 
-    let currentCutiNo = null;
+    let currentTukarNo = null;
 
-    function showDetailCuti(no, tanggal, pemohon, urgensi, waktu, durasi, alamat, kepentingan, pj, status) {
-        currentCutiNo = no;
-        document.getElementById('detail-cuti-no').innerText = 'Nomor Dokumen: ' + no;
-        document.getElementById('detail-cuti-tanggal').innerText = tanggal;
-        document.getElementById('detail-cuti-pemohon').innerText = pemohon;
-        document.getElementById('detail-cuti-urgensi').innerHTML = `<span class="badge badge-info">${urgensi}</span>`;
-        document.getElementById('detail-cuti-waktu').innerText = waktu;
-        document.getElementById('detail-cuti-durasi').innerText = durasi;
-        document.getElementById('detail-cuti-alamat').innerText = alamat || '-';
-        document.getElementById('detail-cuti-kepentingan').innerText = kepentingan || '-';
-        document.getElementById('detail-cuti-pj').innerText = pj;
+    function showDetailTukar(no, tanggal, pihak1, pihak2, waktu, alasan, pj, status) {
+        currentTukarNo = no;
+        document.getElementById('detail-tukar-no').innerText = 'Nomor Dokumen: ' + no;
+        document.getElementById('detail-tukar-tanggal').innerText = tanggal;
+        document.getElementById('detail-tukar-pihak1').innerText = pihak1;
+        document.getElementById('detail-tukar-pihak2').innerText = pihak2;
+        document.getElementById('detail-tukar-waktu').innerText = waktu;
+        document.getElementById('detail-tukar-alasan').innerText = alasan || '-';
+        document.getElementById('detail-tukar-pj').innerText = pj;
         
         let statusBadge = '';
         if (status === 'Proses Pengajuan') {
@@ -884,16 +823,16 @@
         } else {
             statusBadge = '<span class="badge badge-danger">Ditolak</span>';
         }
-        document.getElementById('detail-cuti-status').innerHTML = statusBadge;
+        document.getElementById('detail-tukar-status').innerHTML = statusBadge;
 
         // Reset workflow colors
-        const line = document.getElementById('workflow-line');
-        const cPj = document.getElementById('step-pj-circle');
-        const lPj = document.getElementById('step-pj-label');
-        const sPj = document.getElementById('step-pj-sub');
-        const cHrd = document.getElementById('step-hrd-circle');
-        const lHrd = document.getElementById('step-hrd-label');
-        const sHrd = document.getElementById('step-hrd-sub');
+        const line = document.getElementById('tukar-workflow-line');
+        const cPj = document.getElementById('tukar-step-pj-circle');
+        const lPj = document.getElementById('tukar-step-pj-label');
+        const sPj = document.getElementById('tukar-step-pj-sub');
+        const cHrd = document.getElementById('tukar-step-hrd-circle');
+        const lHrd = document.getElementById('tukar-step-hrd-label');
+        const sHrd = document.getElementById('tukar-step-hrd-sub');
 
         line.style.background = 'var(--border-color)';
         
@@ -969,16 +908,16 @@
             sHrd.style.color = 'var(--danger)';
         }
 
-        document.getElementById('cuti-detail-modal').classList.add('active');
+        document.getElementById('tukar-detail-modal').classList.add('active');
     }
 
-    function closeCutiModal() {
-        document.getElementById('cuti-detail-modal').classList.remove('active');
+    function closeTukarModal() {
+        document.getElementById('tukar-detail-modal').classList.remove('active');
     }
 
-    function printCutiFromModal() {
-        if (currentCutiNo) {
-            printDirect(currentCutiNo);
+    function printTukarFromModal() {
+        if (currentTukarNo) {
+            printDirect(currentTukarNo);
         }
     }
 </script>
