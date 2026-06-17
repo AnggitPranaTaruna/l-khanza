@@ -1,134 +1,80 @@
-# Product Requirement Document (PRD) - L-Khanza
+# Product Requirements Document (PRD) - SIMRS KHANZA
 
-L-Khanza adalah web port berbasis framework **Laravel 12** yang dirancang untuk mengadopsi struktur, skema basis data, otentikasi, dan hak akses dari sistem **SIMRS Khanza**.
-
----
-
-## 1. 🛡️ Keamanan & Otentikasi (Hak Akses SIMRS Khanza)
-
-Spesifikasi otentikasi dan otorisasi L-Khanza mengikuti standar **SIMRS Khanza** menggunakan enkripsi **AES-128-ECB** pada tingkat basis data MySQL dengan kunci enkripsi (secret keys) spesifik:
-
-### A. Mekanisme Kredensial Enkripsi
-* **Key Username / ID**: `'nur'`
-* **Key Password**: `'windi'`
-* Enkripsi data saat penyimpanan menggunakan fungsi MySQL `AES_ENCRYPT(?, 'nur')` untuk username/ID dan `AES_ENCRYPT(?, 'windi')` untuk password.
-* Pencocokan login menggunakan perbandingan raw SQL:
-  ```sql
-  -- Cek Admin Utama
-  SELECT * FROM admin WHERE usere = AES_ENCRYPT(username, 'nur') AND passworde = AES_ENCRYPT(password, 'windi');
-  
-  -- Cek User/Pegawai
-  SELECT * FROM user WHERE id_user = AES_ENCRYPT(nik, 'nur') AND password = AES_ENCRYPT(password, 'windi');
-  ```
-
-### B. Matriks Hak Akses (Otorisasi)
-* **Admin Utama (Superuser)**: Akun yang terdaftar di tabel `admin`. Admin Utama otomatis mem-bypass semua pemeriksaan hak akses dan memiliki akses penuh (`true`) ke semua fitur sistem.
-* **User / Pegawai**: Akun yang terdaftar di tabel `user`. Hak akses bersifat granular dan dinilai langsung dari ratusan kolom bertipe `enum('true','false')` di dalam tabel `user`.
-  * **Modul Kepegawaian**: Diatur oleh kolom `pegawai_admin` (untuk akses administratif/CRUD) dan `pegawai_user` (untuk akses operasional/view).
-  * **Modul Cuti**: Diatur oleh kolom `pengajuan_cuti` (untuk mengajukan cuti dan melihat daftar cuti).
-  * Pemrosesan (Persetujuan/Penolakan) cuti diatur oleh kolom `pegawai_admin` (hanya dapat dilakukan oleh admin/atasan).
+Dokumen ini mendokumentasikan spesifikasi kebutuhan sistem, aturan keamanan, hak akses, dan implementasi fitur yang dikembangkan pada **SIMRS KHANZA** (Subsystem Kepegawaian & Surat Keterangan).
 
 ---
 
-## 2. 🗄️ Spesifikasi Skema & Relasi Basis Data
+## 1. Keamanan & Autentikasi (Standar SIMRS Khanza)
 
-Sistem berjalan menggunakan database MySQL bernama **`sik`** dengan tabel-tabel utama berikut:
+Keamanan dan skema otorisasi sistem ini mereplikasi standar **SIMRS Khanza** asli yang berbasis basis data:
 
-### A. Tabel `pegawai` (Profil Karyawan)
-* Menyimpan profil detail karyawan dengan primary key `id` (Auto Increment) dan unique key `nik` (Nomor Induk Karyawan).
-* Berelasi dengan 10 tabel lookup referensi untuk menjamin integritas data:
-  * `jnj_jabatan` (Jenjang Jabatan)
-  * `kelompok_jabatan` (Kelompok Medis/Administrasi)
-  * `resiko_kerja` (Tingkat Risiko Kerja)
-  * `emergency_index` (Indeks Darurat)
-  * `departemen` (Departemen Karyawan)
-  * `bidang` (Bidang Kerja Karyawan)
-  * `stts_wp` (Status Wajib Pajak)
-  * `stts_kerja` (Status Kepegawaian)
-  * `pendidikan` (Tingkat Pendidikan)
-  * `bank` (Rekening Bank Gaji)
-* Kolom `cuti_diambil` (int) mencatat total akumulasi hari cuti yang telah disetujui.
+### Enkripsi Basis Data (AES-128-ECB)
+Sistem menggunakan enkripsi dua arah pada tingkat basis data (MySQL) untuk otentikasi login:
+1. **Username / ID User / NIK**: Dienkripsi menggunakan fungsi `AES_ENCRYPT(username, 'nur')`.
+2. **Password**: Dienkripsi menggunakan fungsi `AES_ENCRYPT(password, 'windi')`.
 
-### B. Tabel `pengajuan_cuti` (Data Cuti Karyawan)
-* Primary key: `no_pengajuan` (varchar 17).
-* Kolom:
-  * `tanggal` (date) - tanggal input pengajuan.
-  * `tanggal_awal` & `tanggal_akhir` (date) - rentang masa cuti.
-  * `nik` (varchar) - berelasi ke `pegawai.nik` (pemohon).
-  * `urgensi` (enum: Tahunan, Besar, Sakit, Bersalin, Alasan Penting, Keterangan Lainnya) - jenis cuti.
-  * `alamat` (varchar 100) - alamat selama cuti.
-  * `jumlah` (int) - durasi cuti dalam hari (inklusif).
-  * `kepentingan` (varchar 70) - alasan cuti.
-  * `nik_pj` (varchar) - berelasi ke `pegawai.nik` (penanggung jawab selama cuti).
-  * `status` (enum: Proses Pengajuan, Disetujui, Ditolak) - status persetujuan.
+### Skema Tabel Hak Akses (`user`)
+Tabel `user` memiliki ratusan kolom bertipe `enum('true','false')` yang merepresentasikan akses fitur individu:
+* `pegawai_admin` & `pegawai_user` : Mengontrol akses ke data profil pegawai.
+* `pengajuan_cuti` : Mengontrol akses pengajuan cuti & tukar jaga.
+* `surat_keterangan_sehat` : Mengontrol akses pembuatan Surat Ket. Sehat.
+* `kelahiran_bayi` : Mengontrol akses Surat Ket. Kelahiran Bayi.
 
 ---
 
-## 3. 🗺️ Alur Navigasi (Module Selection Launcher)
+## 2. Struktur Hak Akses & Peran Pengguna (RBAC)
 
-Sistem menggunakan alur modular untuk memisahkan launcher utama dengan workspace subsystem:
+Akses menu dan tombol aksi diatur ketat berdasarkan login pengguna:
 
-1. **Dashboard Utama (Launcher) - `/`**
-   * Diakses pertama kali setelah login sukses.
-   * Menampilkan grid kartu pemilihan modul (Kepegawaian, Farmasi, Rekam Medis, dll.).
-   * Sidebar disederhanakan hanya menampilkan navigasi utama "Pilih Modul".
-2. **Workspace Subsystem - `/kepegawaian/dashboard`**
-   * Diakses saat pengguna memilih "Modul Kepegawaian" pada launcher.
-   * Sidebar meluas secara dinamis memuat submenu internal Kepegawaian (Dashboard Modul, Data Pegawai, Cuti Pegawai).
-   * Menampilkan tombol **`⬅️ Menu Utama`** pada sidebar dan header untuk kembali ke launcher modul utama.
+| Peran (Role) | Kriteria / Kolom Izin | Cakupan Hak Akses (Permissions) |
+| :--- | :--- | :--- |
+| **Admin Utama** | Ada di tabel `admin` | Memiliki kontrol penuh atas semua menu dan dapat melakukan persetujuan akhir (HRD) untuk Cuti & Tukar Jaga. |
+| **Penanggung Jawab (PJ)** | NIK dicantumkan sebagai PJ pada pengajuan | Dapat menyetujui (`approve-pj`) atau menolak (`reject-pj`) pengajuan cuti/tukar jaga staf di bawahnya. Tombol aksi hanya muncul jika PJ login dengan akun miliknya sendiri. |
+| **Pegawai Biasa / Staff** | Ada di tabel `user` | Mengisi permohonan cuti/tukar jaga sendiri, dan hanya bisa melihat histori pengajuan miliknya sendiri. |
 
 ---
 
-## 4. 👥 Modul Kepegawaian (HR Module)
+## 3. Alur Kerja (Workflow) Fitur Utama
 
-* **Manajemen CRUD**: Memungkinkan admin (pengguna dengan hak `pegawai_admin`) untuk menambah, mengedit, dan menghapus profil pegawai.
-* **Otomatisasi Akun User**: Saat pegawai baru berhasil ditambahkan ke tabel `pegawai`, sistem secara otomatis membuat akun di tabel `user` dengan username = NIK, password bawaan = `password123` (dienkripsi AES), hak akses `pegawai_user = 'true'`, dan `pengajuan_cuti = 'true'`.
-* **Lookups Form**: Semua pilihan drop-down pada formulir pegawai di-load langsung dari 10 tabel referensi basis data.
+### A. Pengajuan Cuti Berjenjang
+1. **Pengisian**: Pegawai mengisi data pengajuan cuti dan menunjuk Penanggung Jawab (PJ). Status awal: `Proses Pengajuan`.
+2. **Persetujuan PJ**: PJ harus masuk ke sistem menggunakan akunnya sendiri. Menu persetujuan PJ akan tampil dinamis. Jika disetujui, status berubah menjadi `Disetujui PJ`.
+3. **Persetujuan HRD**: Admin Utama/HRD memeriksa pengajuan yang telah disetujui PJ. Jika disetujui, status berubah menjadi `Disetujui` dan kuota cuti pegawai terpotong secara otomatis (`cuti_diambil` bertambah).
+4. **Pembatalan / Penghapusan**: Jika pengajuan yang sudah disetujui HRD dihapus, kuota cuti pegawai otomatis dikembalikan.
 
----
-
-## 5. ✈️ Modul Cuti Pegawai (Leave Subsystem)
-
-* **Antarmuka Desktop-Style (SPA)**: Halaman `index` cuti didesain satu halaman utuh menyerupai aplikasi desktop Java Swing SIMRS Khanza:
-  * Formulir input berada di bagian atas.
-  * Barisan tombol aksi (*Simpan*, *Baru*, *Hapus*, *Ganti*, *Keluar*) berada di tengah.
-  * Pencarian keyword, filter tanggal, dan tabel data berada di bawah.
-* **Pencarian Pegawai Modal (Lookup)**: Tombol clip (`📎`) membuka popup modal untuk mencari dan memilih NIK pemohon dan NIK PJ secara instan dari tabel pegawai aktif.
-* **Format Penomoran Otomatis**: Bidang `No.Pengajuan` diisi otomatis saat form dalam keadaan baru menggunakan format `PCYYYYMMDDXXX` (contoh: `PC20260616001`), berurut sekuensial per tanggal input.
-* **Sinkronisasi Kuota Transaksional**:
-  * Saat pengajuan cuti berstatus **`Disetujui`** (di-approve admin), kolom `cuti_diambil` pada tabel `pegawai` otomatis bertambah sesuai jumlah hari cuti.
-  * Jika persetujuan dibatalkan atau pengajuan dihapus, kuota cuti pada tabel `pegawai` otomatis berkurang kembali.
-  * Menggunakan sistem pemutakhiran dinamis untuk melacak perubahan durasi cuti pada baris data yang sudah disetujui.
+### B. Pengajuan Tukar Jaga Berjenjang
+1. **Pengisian**: Pemohon (Pihak I) mengisi formulir, memilih Rekan Pengganti (Pihak II), dan menunjuk PJ. Status awal: `Proses Pengajuan`.
+2. **Persetujuan PJ**: PJ login untuk memberikan penyetujuan awal. Status berubah menjadi `Disetujui PJ`.
+3. **Persetujuan HRD**: HRD menyetujui pengajuan akhir. Status berubah menjadi `Disetujui`.
+4. **Tanda Tangan Otomatis**: Hasil cetak surat menampilkan digital signature / status persetujuan Pihak I, Pihak II, PJ, dan HRD secara dinamis sesuai status database.
 
 ---
 
-## 6. Desain Visual & Pengalaman Pengguna
-
-* **Vanilla CSS**: Murni tanpa Tailwind/Bootstrap.
-* **Modern Themes (Dark & Light Mode)**:
-  * **Tema Gelap (Default)**: Slate theme (`#0f172a` bg, `#1e293b` cards/sidebar), aksen biru neon (`#0ea5e9`).
-  * **Tema Terang**: Light theme (`#f8fafc` bg, `#ffffff` sidebar/cards), aksen biru langit (`#0284c7`).
-  * **Pencegahan FOUC**: Skrip pemuatan dini disematkan pada `<head>` untuk menyetel tema secara instan dari `localStorage` sebelum halaman melakukan rendering visual.
-* **Responsive Layout (Mobile, Tablet, Laptop)**:
-  * **Desktop / Laptop (Layar > 768px)**: Sidebar dapat disembunyikan (collapsed) dengan menggeser keluar (`margin-left: -260px;`) via tombol hamburger di header untuk memperluas ruang kerja, dan statusnya disimpan di `localStorage`.
-  * **Tablet & Mobile (Layar ≤ 768px)**: Sidebar secara default disembunyikan off-screen dan berubah menjadi overlay laci (drawer) interaktif dengan backdrop gelap (overlay) ketika dibuka.
-  * **Form Stack & Grid Adaptive**: Form input pada Modul Cuti dan Pegawai yang tadinya sejajar horizontal otomatis ditumpuk secara vertikal (stacked) pada layar kecil untuk mencegah pemotongan kolom.
-  * **Responsive Tables**: Seluruh tabel dibungkus dalam `.table-container` dengan `overflow-x: auto` untuk gulir horizontal yang mulus tanpa merusak tata letak layar handphone.
-* **Glassmorphism**: Desain semi-transparan dengan efek blur pada kartu login dan launcher.
-* **Micro-Animations**: Hover transitions pada navigasi, tombol, dan baris tabel untuk meningkatkan keaktifan interaksi antarmuka.
+## 4. Desain & Antarmuka (UI/UX)
+Sistem menggunakan **Vanilla CSS** modern dengan pendekatan premium dan responsif:
+* **Tema Gelap & Terang**: Dilengkapi tombol toggle theme di header. Latar belakang memiliki gradien radial halus (*accent glow*).
+* **Live Background (Animated Mesh & Interactive Particles)**: Ditambahkan 3 lingkaran cahaya dinamis (`.orb-1`, `.orb-2`, `.orb-3`) di latar belakang yang bergerak lambat, dilapisi dengan `<canvas>` interaktif (`#bg-canvas` & `live-bg.js`) yang memancarkan partikel cahaya mengambang dan jaring konstelasi halus. Partikel merespons gerakan mouse (gaya repulsi), mendeteksi kerapatan piksel layar (Retina/High-DPI), mendukung sistem aksesibilitas (`prefers-reduced-motion`), serta bertransisi warna secara dinamis mengikuti perubahan tema.
+* **Glassmorphism**: Desain card menggunakan background semi-transparan (`rgba(22, 28, 45, 0.45)`) dengan `backdrop-filter: blur(20px)`.
+* **Desain Responsif**:
+  * Di komputer/laptop, navigasi sidebar berada di sisi kiri.
+  * Di HP/tablet, sidebar otomatis tersembunyi (*offscreen drawer*) dan dapat dipicu menggunakan tombol hamburger menu di header dengan overlay blur yang elegan.
+  * Formulir input otomatis tersusun 1 kolom pada layar HP.
+* **Layout Cetak**: Seluruh hasil cetak dokumen surat dikonfigurasi menggunakan layout **A4 Portrait** agar rapi saat diprint ke kertas fisik.
 
 ---
 
-## 7. ✉️ Modul Surat Keterangan (Letters Subsystem)
+## 5. Perbaikan & Penanganan Error Terbaru
 
-* **Skema & Integritas Data**: Berjalan di atas tabel `surat_keterangan_sehat` (10 kolom) yang berelasi dengan `reg_periksa` (tabel registrasi) dan `pasien` (tabel profil pasien).
-* **Format Penomoran Otomatis**: Bidang `No.Surat` diisi otomatis saat form dalam keadaan baru menggunakan format `urut/D/SS/ROMAN_MONTH/AM/TBB/YEAR` (contoh: `001/D/SS/VI/AM/TBB/2026`). Nilai `urut` diperoleh dengan mengambil angka tertinggi yang terdaftar pada tahun berjalan lalu diinkrementasi (+1). Format nomor akan menyesuaikan secara real-time apabila tanggal surat diubah.
-* **Pencarian Registrasi Pasien (Lookup)**: Tombol clip (`📎`) membuka popup modal untuk mencari data registrasi pemeriksaan aktif (`no_rawat`) dari database. Hasil pencarian menampilkan data No. Rawat, No. Rekam Medis, dan Nama Pasien secara terperinci. Ketika baris dipilih, data langsung terisi di form utama.
-* **Layout Cetak Surat Resmi (High Fidelity)**: 
-  * Menu *Cetak* membuka jendela baru berisi berkas Surat Keterangan Sehat resmi siap cetak.
-  * Dilengkapi kop surat double-line dengan logo instansi dan detail alamat rumah sakit.
-  * Memuat data diri lengkap pasien beserta hasil pemeriksaan fisik (BB, TB, Tensi, Suhu, Buta Warna).
-  * Menampilkan kesimpulan kelaikan kondisi fisik (**SEHAT / TIDAK SEHAT**).
-  * Blok tanda tangan dokter pemeriksa dilengkapi tanda tangan elektronik (e-sign verification block) berbasis hashing SHA1 dari kode dokter.
-  * Otomatis memicu dialog cetak browser (`window.print()`).
-
+1. **Tombol Logout Terhambat**:
+   * *Masalah*: Logout POST memicu error 419 (Page Expired) jika sesi pengguna telah habis/idle.
+   * *Solusi*: Mengubah rute logout menjadi `Route::match(['get', 'post'])` dan mengganti form logout di layout utama menjadi link `<a>` berbasis GET. Controller menggunakan `session()->invalidate()` and `session()->regenerateToken()` agar pembersihan sesi lebih aman.
+2. **Undefined Variable `$isAdmin`**:
+   * *Masalah*: Error 500 saat memuat `/surat/dashboard` karena variabel otorisasi belum didefinisikan secara lokal di view dashboard surat.
+   * *Solusi*: Menambahkan inisialisasi `$user` dan `$isAdmin` dari session aktif di bagian atas view `surat/dashboard.blade.php`.
+3. **Penyelarasan Nama Brand**:
+   * Semua referensi nama "L-Khanza" diubah menjadi **SIMRS KHANZA** (termasuk pada judul halaman, logo sidebar, dan portal utama dashboard) agar selaras dengan nama resmi produk.
+4. **Pembaruan Tampilan Login**:
+   * Menghapus catatan/informasi akun demo uji coba dan menggantinya dengan penayangan hari, tanggal, serta jam digital secara realtime berbahasa Indonesia.
+5. **Dinamisasi Nama Instansi pada Portal Menu Utama**:
+   * *Masalah*: Judul halaman dan tajuk utama portal masih bertuliskan teks statis "Portal Modul Utama" dan "SIMRS KHANZA".
+   * *Solusi*: Mengubah controller `DashboardController.php` agar mengambil data `nama_instansi` secara langsung dari tabel `setting` di basis data. Nilai dinamis ini kemudian dilewatkan ke `dashboard.blade.php` untuk menampilkan nama instansi (seperti "RS SIMRS") secara otomatis sebagai pengganti "Portal Modul Utama" pada header halaman dan kartu portal utama.

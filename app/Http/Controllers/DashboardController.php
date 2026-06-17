@@ -12,7 +12,9 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        return view('dashboard');
+        $setting = DB::table('setting')->first();
+        $nama_instansi = $setting ? $setting->nama_instansi : 'SIMRS KHANZA';
+        return view('dashboard', compact('nama_instansi'));
     }
 
     /**

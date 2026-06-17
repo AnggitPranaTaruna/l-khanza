@@ -11,9 +11,16 @@
         })();
     </script>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <script src="{{ asset('js/live-bg.js') }}" defer></script>
     @yield('styles')
 </head>
 <body>
+    <div class="bg-glow-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <canvas id="bg-canvas"></canvas>
+    </div>
     <div class="app-container">
         <!-- Sidebar Overlay for Mobile -->
         <div class="sidebar-overlay" id="sidebar-overlay"></div>

@@ -11,8 +11,15 @@
         })();
     </script>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <script src="{{ asset('js/live-bg.js') }}" defer></script>
 </head>
 <body class="login-container">
+    <div class="bg-glow-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <canvas id="bg-canvas"></canvas>
+    </div>
     <div class="login-card">
         <div class="login-header">
             <div class="login-logo">
@@ -69,11 +76,37 @@
             </button>
         </form>
 
-        <div class="login-info-box" style="margin-top: 24px; margin-bottom: 0;">
-            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">Akun Demo/Uji Coba:</p>
-            <p style="margin-bottom: 4px;">• <strong>Admin Utama</strong>:<br>ID User: <code>spv</code> | Pass: <code>server</code></p>
-            <p>• <strong>Pegawai (Staff HRD)</strong>:<br>ID User: <code>1001</code> | Pass: <code>password123</code></p>
+        <div class="login-time-box" style="margin-top: 24px; padding: 14px 18px; background-color: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); text-align: center; backdrop-filter: blur(8px);">
+            <div id="realtime-clock" style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: var(--primary); letter-spacing: 0.05em; margin-bottom: 4px; line-height: 1;">00:00:00</div>
+            <div id="realtime-date" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Hari, DD MMMM YYYY</div>
         </div>
     </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // Format time
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('realtime-clock').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // Format date in Indonesian
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dayName = days[now.getDay()];
+            const day = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            document.getElementById('realtime-date').textContent = `${dayName}, ${day} ${monthName} ${year}`;
+        }
+        
+        // Update immediately and then every second
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 </body>
 </html>
